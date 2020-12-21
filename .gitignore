@@ -112,6 +112,7 @@ checkpoint
 
 # Mac
 *.DS_Store
+*.dSYM
 
 # Python
 *.pyc

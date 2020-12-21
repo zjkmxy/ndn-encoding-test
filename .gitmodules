@@ -1,0 +1,3 @@
+[submodule "YaNFD"]
+	path = YaNFD
+	url = https://github.com/eric135/YaNFD.git

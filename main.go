@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/eric135/YaNFD/benchmark"
 	"github.com/eric135/YaNFD/ndn"
 	"github.com/eric135/YaNFD/ndn/security"
-	"github.com/eric135/YaNFD/refl"
+	"github.com/zjkmxy/ndn-encoding-test/benchmark"
+	"github.com/zjkmxy/ndn-encoding-test/refl"
 )
 
 func main() {
-	cases := benchmark.Generator(100000, 100)
+	cases := benchmark.Generator(1000000, 100)
 	// cases := benchmark.Generator(1, 1)
 	tim := benchmark.Execute(cases, blockEncode)
 	fmt.Printf("%v\n", tim)
