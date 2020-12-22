@@ -6,5 +6,4 @@ replace github.com/eric135/YaNFD => ./YaNFD
 
 require (
 	github.com/eric135/YaNFD v1.0.0
-	github.com/stretchr/testify v1.6.1
 )
