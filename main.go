@@ -12,19 +12,35 @@ import (
 )
 
 func main() {
-	cases := benchmark.Generator(1000000, 1)
-	// cases := benchmark.Generator(1, 1)
-	tim := benchmark.Execute(cases, blockEncode)
-	fmt.Printf("block: \t%v\n", tim)
-	tim = benchmark.Execute(cases, reflEncode)
-	fmt.Printf("reflection: \t%v\n", tim)
-	tim = benchmark.Execute(cases, reflEncode)
-	fmt.Printf("codegen: \t%v\n", tim)
+	var cases []benchmark.Case
+
+	fmt.Printf("#1: 1000000 x 100B\n")
+	cases = benchmark.Generator(1000000, 100, 0)
+	run(cases)
+
+	fmt.Printf("#2: 45230 x 4000B\n")
+	cases = benchmark.Generator(45230, 4000, 0)
+	run(cases)
+
+	fmt.Printf("#3: 1000000 x 1B, very long name\n")
+	cases = benchmark.Generator(1000000, 1, 33)
+	run(cases)
 
 	return
 }
 
-func blockEncode(c benchmark.Case) {
+func run(cases []benchmark.Case) {
+	tim, totalBytes := benchmark.Execute(cases, blockEncode)
+	fmt.Printf("block: \t\t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, reflEncode)
+	fmt.Printf("reflection: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, codegenEncode)
+	fmt.Printf("codegen: \t%v\n", tim)
+	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
+	fmt.Println()
+}
+
+func blockEncode(c benchmark.Case) int {
 	name, err := ndn.NameFromString(c.Name)
 	if err != nil {
 		panic(err)
@@ -45,10 +61,10 @@ func blockEncode(c benchmark.Case) {
 		panic(err)
 	}
 	// fmt.Printf("%+v\n", wire)
-	noop(wire)
+	return len(wire)
 }
 
-func reflEncode(c benchmark.Case) {
+func reflEncode(c benchmark.Case) int {
 	data := &refl.Data{
 		Name: refl.NameFromStr(c.Name),
 		MetaInfo: &refl.MetaInfo{
@@ -63,10 +79,10 @@ func reflEncode(c benchmark.Case) {
 	}
 	wire := data.Encode()
 	// fmt.Printf("%+v\n", wire)
-	noop(wire)
+	return len(wire)
 }
 
-func codegenEncode(c benchmark.Case) {
+func codegenEncode(c benchmark.Case) int {
 	data := &codegen.Data{
 		Name: refl.NameFromStr(c.Name),
 		MetaInfo: &codegen.MetaInfo{
@@ -81,8 +97,5 @@ func codegenEncode(c benchmark.Case) {
 	}
 	wire := data.Encode()
 	// fmt.Printf("%+v\n", wire)
-	noop(wire)
-}
-
-func noop(v interface{}) {
+	return len(wire)
 }
