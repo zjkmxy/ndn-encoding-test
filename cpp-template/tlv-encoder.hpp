@@ -11,8 +11,13 @@
 
 namespace tlv {
 
+// BufferPtr represents a byte buffer with its length
+// We can directly use vector without wrapping it by shared_ptr,
+// because the compiler will automatically optimize things like RValue move, and most of the times
+// returning a vector will not copy its content.
 using BufferPtr = std::vector<uint8_t>;
 
+// Encoding of integers in BigEndian
 namespace endian {
   inline void BigEndianWord(uint16_t val, uint8_t* buf) {
     buf[0] = ((val >> 8) & 0xFF);
@@ -38,9 +43,13 @@ namespace endian {
   }
 };
 
+// TlvConstEncoder encodes a TLV type number known at compiling time.
+// Dynamic values should be handled by NaturalNumberEncoder<true>
 template<uint64_t num>
 struct TlvConstEncoder {
+  // EncodeSize returns the expected length after encoding
   static constexpr size_t EncodeSize() {
+    // if constexpr will be computed at compile time.
     if constexpr (num <= 0xfc){
       return 1;
     } else if constexpr (num <= 0xffff){
@@ -51,7 +60,10 @@ struct TlvConstEncoder {
       return 9;
     }
   }
-  
+
+  // EncodeInto encodes the object into buf.
+  // buflen is not checked in this quick and dirty implementation.
+  // The actually used size is returned.
   static inline size_t EncodeInto(uint8_t* buf, size_t buflen) {
     if constexpr (num <= 0xfc){
       buf[0] = uint8_t(num);
@@ -72,6 +84,9 @@ struct TlvConstEncoder {
   }
 };
 
+// NaturalNumberEncoder encodes a natural number.
+// NaturalNumberEncoder<true> encodes a TLV type or length number.
+// NaturalNumberEncoder<false> encodes a natural number as value (without TL).
 template<bool isTlvVar>
 struct NaturalNumberEncoder {
   uint64_t value;
@@ -137,6 +152,8 @@ struct NaturalNumberEncoder {
   }
 };
 
+// BinaryStringEncoder encodes a binary string in the form of buffer + length.
+// Not used.
 struct BinaryStringEncoder {
   const uint8_t *value;
   size_t length;
@@ -150,6 +167,13 @@ struct BinaryStringEncoder {
   }
 };
 
+// FieldEncoder wraps an encoder into a field of a struct or class.
+// It will encodes TLV type and length number before the encoder encodes value.
+// Model is the class of TLV model, i.e. the struct holding this field.
+// Encoder is the class of original encoder.
+// Args are arguments that used to initialize the encoder, in the form of offsets.
+// For example, to initialize Encoder(m.a, m.b), we need to write
+//   FieldEncoder<typeNum, Model, Encoder, &Model::a, &Model::b>
 template<uint64_t typeNum, typename Model, typename Encoder, auto ...args>
 struct FieldEncoder {
   Encoder encoder;
@@ -175,12 +199,20 @@ using NaturalFieldEncoder = FieldEncoder<typeNum, Model, NaturalNumberEncoder<fa
 template<uint64_t typeNum, typename Model, uint8_t* Model::* bufOffset, size_t Model::* lengthOffset>
 using BinaryFieldEncoder = FieldEncoder<typeNum, Model, BinaryStringEncoder, bufOffset, lengthOffset>;
 
+// StructEncoder encodes a struct or a class.
+// Encoder parameters specify the field encoders of fields of this struct/class.
+// They will be called in order.
+// The only parameter passed to initialize field encoders are the instance of the struct/class.
 template<typename Model, typename ...Encoder>
 struct StructEncoder {
+  // Store the instances of field encoders.
   std::tuple<Encoder...> encoders;
 
+  // Use the instance to initialize the field encoders.
   inline StructEncoder(const Model& model):encoders(std::make_tuple(Encoder(model)...)){}
 
+  // enable_if is the way to build recursive functions in compile time.
+  // EncodeSize just adds up all sizes of its fields.
   template<std::size_t I = 0>
   inline typename std::enable_if<I == sizeof...(Encoder), size_t>::type
   EncodeSize() const {
@@ -192,7 +224,8 @@ struct StructEncoder {
   EncodeSize() const {
     return std::get<I>(encoders).EncodeSize() + EncodeSize<I+1>();
   }
-  
+
+  // Similarly, EncodeInto encodes the fields in order.
   template<std::size_t I = 0>
   inline typename std::enable_if<I == sizeof...(Encoder), size_t>::type
   EncodeInto(uint8_t* buf, size_t buflen) const {
@@ -205,7 +238,9 @@ struct StructEncoder {
     size_t pos = std::get<I>(encoders).EncodeInto(buf, buflen);
     return pos + EncodeInto<I+1>(buf + pos, buflen - pos);
   }
-  
+
+  // Encode automatically allocates a buffer of proper size and encode into it.
+  // Not used by Data, but could be used by every struct other than Data and Interest.
   BufferPtr Encode() const {
     size_t length = EncodeSize();
     BufferPtr ret(length, 0);
@@ -214,12 +249,18 @@ struct StructEncoder {
   }
 };
 
+// StructFieldEncoder encodes a field which is another TLV model (struct/class)
+// Model is the type of the struct/class holding this field.
+// FieldType is the original struct/class.
 template<uint64_t typeNum, typename Model, typename FieldType, FieldType Model::* offset>
 using StructFieldEncoder = FieldEncoder<typeNum, Model, typename FieldType::Encoder, offset>;
 
+// Directly use binary vector as NameComponent.
 using NameComponent = std::vector<uint8_t>;
 using Name = std::vector<NameComponent>;
 
+// ByteVectorEncoder encodes std::string and std::vector<uint8_t>, without TL.
+// Equivalent to BinaryStringEncoder.
 template<typename Vector>
 struct ByteVectorEncoder {
   const Vector& value;
@@ -237,7 +278,8 @@ using StringEncoder = ByteVectorEncoder<std::string>;
 template<uint64_t typeNum, typename Model, std::string Model::* offset>
 using StringFieldEncoder = FieldEncoder<typeNum, Model, StringEncoder, offset>;
 
-
+// NameComponentFromString encodes a GenericNameComponent from a string.
+// Note: an interesting fact is, the most time consuming part of the whole experiment is new() called by this function.
 NameComponent NameComponentFromString(const std::string& str){
   NaturalNumberEncoder<true> lengthEncoder(str.length());
   StringEncoder stringEncoder(str);
@@ -249,6 +291,8 @@ NameComponent NameComponentFromString(const std::string& str){
   return ret; // Automatically moved
 }
 
+// NameFromString encodes a Name from a string. Implemented quickly, without support of naming conventions.
+// Assume str starts with a "/" and does not ent with a "/".
 Name NameFromString(const std::string& str){
   auto start = 1UL;
   auto end = str.find("/", start);
@@ -273,6 +317,12 @@ Name NameFromString(const std::string& str){
   return ret;
 }
 
+// SequenceEncoder encodes a sequence (vector) of fields, of type Type and associated with encoder Encoder.
+// TLV type & length number are handled by the original Encoder, if exist.
+// SequenceEncoder just concatenate everything in the vector together.
+// Note:
+//    FieldEncoder<SequenceEncoder<>> results in something like Name in Data.
+//    SequenceEncoder<FieldEncoder<>> results in something like Delegation in ForwardingHint.
 template<typename Type, typename Encoder>
 struct SequenceEncoder {
   const std::vector<Type>& value;
