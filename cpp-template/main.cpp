@@ -1,7 +1,6 @@
 #include "ndn-format-0-3.hpp"
 
 using namespace ndn;
-using namespace tlv;
 
 void encode(std::string name){
   Data data{
@@ -9,7 +8,7 @@ void encode(std::string name){
     MetaInfo {
       0,
       4000,
-      NameComponentFromString("10000")
+      GenericNameComponent(std::string("10000"))
     },
     std::vector<uint8_t>(100, 0),
     SignatureInfo{

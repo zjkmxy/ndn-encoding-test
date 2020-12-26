@@ -8,56 +8,60 @@ namespace ndn {
 using namespace tlv;
 
 struct MetaInfo {
-  uint64_t ContentType;
-  uint64_t FreshnessPeriod;
-  NameComponent FinalBlockId;
+  std::optional<uint64_t> contentType;
+  std::optional<uint64_t> freshnessPeriod;
+  std::optional<NameComponent> finalBlockId;
   
-  using Encoder = StructEncoder<MetaInfo,
-    NaturalFieldEncoder<0x18, MetaInfo, &MetaInfo::ContentType>,
-    NaturalFieldEncoder<0x19, MetaInfo, &MetaInfo::FreshnessPeriod>,
-    NameComponentFieldEncoder<0x1a, MetaInfo, &MetaInfo::FinalBlockId>>;
+  using Encodable = Struct<MetaInfo,
+    NaturalFieldOpt<0x18, MetaInfo, &MetaInfo::contentType>,
+    NaturalFieldOpt<0x19, MetaInfo, &MetaInfo::freshnessPeriod>,
+    NameComponentFieldOpt<0x1a, MetaInfo, &MetaInfo::finalBlockId>>;
 };
 
 struct SignatureInfo {
-  uint64_t SignatureType;
+  uint64_t signatureType;
 
-  using Encoder = StructEncoder<SignatureInfo,
-    NaturalFieldEncoder<0x1b, SignatureInfo, &SignatureInfo::SignatureType>>;
+  using Encodable = Struct<SignatureInfo,
+    NaturalField<0x1b, SignatureInfo, &SignatureInfo::signatureType>>;
 };
 
-struct SignatureValueEncoder {
-  constexpr size_t EncodeSize() const {
+template<typename Vector>
+struct SignatureValueEncodable {
+  inline SignatureValueEncodable(const Vector& value){}
+  inline size_t EncodeSize() const {
     return 32;
   }
-  constexpr size_t EncodeInto(uint8_t* buf, size_t buflen) const {
+  inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
     return 32;
   }
 };
 
 struct Data {
-  Name Name;
-  MetaInfo MetaInfo;
-  std::vector<uint8_t> Content;
-  SignatureInfo SignatureInfo;
-  std::vector<uint8_t> SignatureValue;
+  Name name;
+  std::optional<MetaInfo> metaInfo;
+  // Should be replaced with a memory view to avoid copying on decoding
+  std::optional<std::vector<uint8_t>> content;
+  SignatureInfo signatureInfo;
+  mutable std::vector<uint8_t> signatureValue;
   
-  using Encoder = StructEncoder<Data,
-    NameFieldEncoder<0x07, Data, &Data::Name>,
-    StructFieldEncoder<0x14, Data, decltype(MetaInfo), &Data::MetaInfo>,
-    NameComponentFieldEncoder<0x15, Data, &Data::Content>,
-    StructFieldEncoder<0x16, Data, decltype(SignatureInfo), &Data::SignatureInfo>,
-    FieldEncoder<0x17, Data, SignatureValueEncoder>>;
+  using Encodable = Struct<Data,
+    NameField<0x07, Data, &Data::name>,
+    StructFieldOpt<0x14, Data, struct MetaInfo, &Data::metaInfo>,
+    BytesFieldOpt<0x15, Data, std::vector<uint8_t>, &Data::content>,
+    StructField<0x16, Data, decltype(signatureInfo), &Data::signatureInfo>,
+    Field<Data, TlvBlock<0x17, Buffer, SignatureValueEncodable<Buffer>>, &Data::signatureValue>>;
     
-  BufferPtr Encode() const {
-    Encoder dataEncoder(*this);
-    NaturalNumberEncoder<true> lengthEncoder(dataEncoder.EncodeSize());
-    size_t size = TlvConstEncoder<0x06>::EncodeSize()
-                + lengthEncoder.EncodeSize()
-                + dataEncoder.EncodeSize();
-    BufferPtr ret(size, 0);
-    size_t pos = TlvConstEncoder<0x06>::EncodeInto(ret.data(), size);
-    pos += lengthEncoder.EncodeInto(ret.data() + pos, size - pos);
-    dataEncoder.EncodeInto(ret.data() + pos, size - pos);
+  Buffer Encode() const {
+    Encodable data(*this);
+    TlvVar length(data.EncodeSize());
+    TlvConst<0x06> typeNum;
+    size_t size = typeNum.EncodeSize()
+                + length.EncodeSize()
+                + data.EncodeSize();
+    Buffer ret(size, 0);
+    size_t pos = typeNum.EncodeInto(ret.data(), size);
+    pos += length.EncodeInto(ret.data() + pos, size - pos);
+    data.EncodeInto(ret.data() + pos, size - pos);
 
     SHA256 ctx = SHA256();
     ctx.init();
@@ -67,6 +71,5 @@ struct Data {
     return ret;
   }
 };
-
 
 };
