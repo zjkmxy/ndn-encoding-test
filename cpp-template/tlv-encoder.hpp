@@ -12,19 +12,14 @@
 #ifdef __cpp_concepts
 #include <concepts>
 #endif
+#include "slice.hpp"
 
 namespace tlv {
 
-// Buffer represents a byte buffer with its length
-// We can directly use vector without wrapping it by shared_ptr,
-// because the compiler will automatically optimize things like RValue move, and most of the times
-// returning a vector will not copy its content.
-using Buffer = std::vector<uint8_t>;
-
 
 // Directly use binary vector as NameComponent.
-using NameComponent = std::vector<uint8_t>;
-using Name = std::vector<NameComponent>;
+using NameComponent = Buffer;
+using Name = std::vector<Buffer>;
 
 #ifdef __cpp_concepts
 template<typename T>
@@ -381,7 +376,7 @@ struct Struct {
   // Not used by Data, but could be used by every struct other than Data and Interest.
   Buffer Encode() const {
     size_t length = EncodeSize();
-    Buffer ret(length, 0);
+    Buffer ret(length);
     EncodeInto(ret.data(), length);
     return ret;
   }
@@ -417,43 +412,40 @@ using StructFieldOpt = Field<Model,
 // Note: an interesting fact is, the most time consuming part of the whole experiment is new() called by this function.
 // Well, copying is necessary for this function.
 // But for other usage, should we change to something like Go slice? (Seems that C++20 borrowed_range does not work)
-template<typename String>
-NameComponent GenericNameComponent(const String& str){
-  TlvBlock<8, String, ByteString<String>> encodable(str);
+NameComponent GenericNameComponent(const std::string_view& str){
+  TlvBlock<8, std::string_view, ByteString<std::string_view>> encodable(str);
   size_t size = encodable.EncodeSize();
-  std::vector<uint8_t> ret(size, 0);
+  Buffer ret(size);
   encodable.EncodeInto(ret.data(), size);
   return ret; // Automatically moved
 }
 
 // NameFromString encodes a Name from a string. Implemented quickly, without support of naming conventions.
 // Assume str starts with a "/" and does not ent with a "/".
-Name NameFromString(const std::string& str){
+Name NameFromString(const std::string_view& str){
   auto start = 1UL;
-  std::string_view view(str);
-  auto end = view.find("/", start);
+  auto end = str.find("/", start);
   size_t cnt = 0;
   while(end != std::string::npos) {
     cnt ++;
     start = end + 1;
-    end = view.find("/", start);
+    end = str.find("/", start);
   }
   cnt ++;
-  Name ret(cnt);
+  Name ret;
+  ret.reserve(cnt);
   start = 1UL;
-  end = view.find("/", start);
-  cnt = 0;
+  end = str.find("/", start);
   while(end != std::string::npos) {
-    ret[cnt] = GenericNameComponent(view.substr(start, end - start));
-    cnt ++;
+    ret.push_back(GenericNameComponent(str.substr(start, end - start)));
     start = end + 1;
-    end = view.find("/", start);
+    end = str.find("/", start);
   }
-  ret[cnt] = GenericNameComponent(view.substr(start, end - start));
+  ret.push_back(GenericNameComponent(str.substr(start, end - start)));
   return ret;
 }
 
-using EncodableName = Sequence<std::vector<uint8_t>, ByteString<std::vector<uint8_t>>>;
+using EncodableName = Sequence<Buffer, ByteString<Buffer>>;
 
 template<uint64_t typeNum, typename Model, Name Model::* offset>
 using NameField = Field<Model, TlvBlock<typeNum, Name, EncodableName>, offset>;

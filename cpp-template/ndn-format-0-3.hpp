@@ -40,14 +40,14 @@ struct Data {
   Name name;
   std::optional<MetaInfo> metaInfo;
   // Should be replaced with a memory view to avoid copying on decoding
-  std::optional<std::vector<uint8_t>> content;
+  std::optional<Buffer> content;
   SignatureInfo signatureInfo;
-  mutable std::vector<uint8_t> signatureValue;
+  mutable Buffer signatureValue;
   
   using Encodable = Struct<Data,
     NameField<0x07, Data, &Data::name>,
     StructFieldOpt<0x14, Data, struct MetaInfo, &Data::metaInfo>,
-    BytesFieldOpt<0x15, Data, std::vector<uint8_t>, &Data::content>,
+    BytesFieldOpt<0x15, Data, Buffer, &Data::content>,
     StructField<0x16, Data, decltype(signatureInfo), &Data::signatureInfo>,
     Field<Data, TlvBlock<0x17, Buffer, SignatureValueEncodable<Buffer>>, &Data::signatureValue>>;
     
@@ -58,7 +58,7 @@ struct Data {
     size_t size = typeNum.EncodeSize()
                 + length.EncodeSize()
                 + data.EncodeSize();
-    Buffer ret(size, 0);
+    Buffer ret(size);
     size_t pos = typeNum.EncodeInto(ret.data(), size);
     pos += length.EncodeInto(ret.data() + pos, size - pos);
     data.EncodeInto(ret.data() + pos, size - pos);

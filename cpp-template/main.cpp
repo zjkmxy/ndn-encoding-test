@@ -10,7 +10,7 @@ void encode(std::string name){
       4000,
       GenericNameComponent(std::string("10000"))
     },
-    std::vector<uint8_t>(100, 0),
+    Buffer(100),
     SignatureInfo{
       0
     }
