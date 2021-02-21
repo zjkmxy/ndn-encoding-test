@@ -15,15 +15,15 @@ func main() {
 	var cases []benchmark.Case
 
 	fmt.Printf("#1: 1000000 x 100B\n")
-	cases = benchmark.Generator(1000000, 100, 0)
+	cases = benchmark.GenerateEncodingCases(1000000, 100, 0)
 	run(cases)
 
 	fmt.Printf("#2: 45230 x 4000B\n")
-	cases = benchmark.Generator(45230, 4000, 0)
+	cases = benchmark.GenerateEncodingCases(45230, 4000, 0)
 	run(cases)
 
 	fmt.Printf("#3: 1000000 x 1B, very long name\n")
-	cases = benchmark.Generator(1000000, 1, 33)
+	cases = benchmark.GenerateEncodingCases(1000000, 1, 33)
 	run(cases)
 
 	return

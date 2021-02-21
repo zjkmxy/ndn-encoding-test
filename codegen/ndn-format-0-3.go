@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"crypto/sha256"
 	"time"
 
 	"github.com/zjkmxy/ndn-encoding-test/refl"
@@ -27,7 +28,15 @@ type Data struct {
 func (v *Data) Encode() []byte {
 	e := DataEncoder{}
 	e.init(v)
-	ret := make([]byte, e.length)
-	e.encodeInto(v, ret)
+	l := e.length
+	tlvLen := refl.TLVVar(l)
+	ret := make([]byte, 1+tlvLen.Length()+l)
+	pos := refl.TLVVar(0x06).Encode(ret)
+	pos += tlvLen.Encode(ret[pos:])
+
+	sha := sha256.New()
+	end := pos + e.encodeInto(v, ret[pos:]) - uint(sha.Size()) - 2
+	sha.Write(ret[pos:end])
+	sha.Sum(ret[0 : end+2])
 	return ret
 }

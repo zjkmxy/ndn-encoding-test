@@ -70,6 +70,18 @@ namespace big_endian {
   inline void Qword(uint64_t val, uint8_t* buf) {
     *(uint64_t*)buf = __builtin_bswap64(val);
   }
+
+  inline uint16_t ReadWord(const uint8_t* buf) {
+    return (uint16_t)__builtin_bswap16(*(const uint16_t*)buf);
+  }
+
+  inline uint32_t ReadDword(const uint8_t* buf) {
+    return (uint32_t)__builtin_bswap32(*(const uint32_t*)buf);
+  }
+
+  inline uint64_t ReadQword(const uint8_t* buf) {
+    return (uint64_t)__builtin_bswap64(*(const uint64_t*)buf);
+  }
 };
 
 

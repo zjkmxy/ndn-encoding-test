@@ -134,6 +134,7 @@ class BinaryField(Field):
     self.encode_type_num()
     natural_number_encode(f'len(v.{self.name})', True)
     print(f'\tcopy(buf[pos:], v.{self.name})')
+    print(f'\tpos += uint(len(v.{self.name}))')
 
 
 class SignatureField(Field):

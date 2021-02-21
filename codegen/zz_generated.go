@@ -24,7 +24,7 @@ func (e *MetaInfoEncoder) init(v *MetaInfo) {
 		l += 9
 	}
 	l += 1
-	switch x := uint64(v.FreshnessPeriod / time.Millisecond); {
+	switch x := uint64(v.FreshnessPeriod/time.Millisecond); {
 	case x <= 0xff:
 		l += 2
 	case x <= 0xffff:
@@ -73,7 +73,7 @@ func (e *MetaInfoEncoder) encodeInto(v *MetaInfo, buf []byte) uint {
 	}
 	buf[pos] = 25
 	pos += 1
-	switch x := uint64(v.FreshnessPeriod / time.Millisecond); {
+	switch x := uint64(v.FreshnessPeriod/time.Millisecond); {
 	case x <= 0xff:
 		buf[pos] = 1
 		buf[pos+1] = byte(x)
@@ -111,6 +111,7 @@ func (e *MetaInfoEncoder) encodeInto(v *MetaInfo, buf []byte) uint {
 		pos += 9
 	}
 	copy(buf[pos:], v.FinalBlockID)
+	pos += uint(len(v.FinalBlockID))
 	return pos
 }
 
@@ -160,9 +161,9 @@ func (e *SignatureInfoEncoder) encodeInto(v *SignatureInfo, buf []byte) uint {
 }
 
 type DataEncoder struct {
-	length                uint
-	Name_length           uint
-	MetaInfo_encoder      MetaInfoEncoder
+	length uint
+	Name_length uint
+	MetaInfo_encoder MetaInfoEncoder
 	SignatureInfo_encoder SignatureInfoEncoder
 }
 
@@ -292,6 +293,7 @@ func (e *DataEncoder) encodeInto(v *Data, buf []byte) uint {
 		pos += 9
 	}
 	copy(buf[pos:], v.Content)
+	pos += uint(len(v.Content))
 	buf[pos] = 22
 	pos += 1
 	switch x := e.SignatureInfo_encoder.length; {
@@ -318,3 +320,4 @@ func (e *DataEncoder) encodeInto(v *Data, buf []byte) uint {
 	pos += 33
 	return pos
 }
+
