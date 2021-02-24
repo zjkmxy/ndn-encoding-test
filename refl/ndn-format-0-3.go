@@ -46,6 +46,24 @@ func (v *Data) Encode() []byte {
 	}
 	end := int(l) - sha.Size() - 2
 	sha.Write(ret[pos:end])
-	sha.Sum(ret[0:end+2])
+	sha.Sum(ret[0 : end+2])
 	return ret
+}
+
+func DecodeData(buf []byte) *Data {
+	typ, size := DecodeTLVVar(buf)
+	if typ != 0x06 {
+		return nil
+	}
+	pos := size
+	l, size := DecodeTLVVar(buf[pos:])
+	pos += size
+	if pos+uint(l) != uint(len(buf)) {
+		return nil
+	}
+	ret, err := ParseStruct(buf[pos:pos+uint(l)], reflect.TypeOf(Data{}))
+	if err != nil {
+		return nil
+	}
+	return (ret.Interface()).(*Data)
 }

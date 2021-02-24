@@ -20,14 +20,10 @@ func NewStruct(typ TLVVar, value reflect.Value) *Struct {
 	fields := make([]TLVField, numFields)
 	for i := 0; i < numFields; i++ {
 		f := t.Field(i)
-		typStr, exists := f.Tag.Lookup("tlv")
-		if !exists {
+		typVal := extractTlvTag(f)
+		if typVal == 0 {
 			fields[i] = nil
 			continue
-		}
-		typVal, err := strconv.ParseUint(typStr, 0, 0)
-		if err != nil {
-			panic(err)
 		}
 
 		fields[i] = GetField(TLVVar(typVal), v.Field(i))
@@ -63,4 +59,80 @@ func (v *Struct) Encode(buf []byte) uint {
 		}
 	}
 	return pos
+}
+
+func isSlice(fieldType reflect.Type) bool {
+	return fieldType.Kind() == reflect.Slice &&
+		fieldType.Elem().Kind() == reflect.Struct
+}
+
+func ParseStruct(buf []byte, structType reflect.Type) (reflect.Value, error) {
+	fieldOffset := make(map[uint64]int)
+	for i := 0; i < structType.NumField(); i++ {
+		f := structType.Field(i)
+		typVal := extractTlvTag(f)
+		if typVal != 0 {
+			fieldOffset[typVal] = i
+		}
+	}
+
+	progress := -1
+	bufLen := uint(len(buf))
+	ret := reflect.New(structType)
+	var l TLVVar
+	for pos := uint(0); pos < bufLen; pos += uint(l) {
+		typ, size := DecodeTLVVar(buf[pos:])
+		pos += size
+		l, size = DecodeTLVVar(buf[pos:])
+		pos += size
+		// NEW
+		fieldIdx, exists := fieldOffset[uint64(typ)]
+		if exists && fieldIdx >= progress {
+			f := structType.Field(fieldIdx)
+			val, err := DecodeField(buf[pos:pos+uint(l)], f.Type)
+			if err != nil {
+				return reflect.ValueOf(nil), err
+			}
+
+			if fieldIdx > progress {
+				progress = fieldIdx
+				if !isSlice(f.Type) {
+					ret.Elem().Field(fieldIdx).Set(val)
+				} else {
+					slice := reflect.MakeSlice(f.Type.Elem(), 0, 1)
+					// TODO: Should we de-ptr val first?
+					slice = reflect.Append(slice, val)
+					ret.Elem().Field(fieldIdx).Set(slice)
+				}
+			} else if isSlice(f.Type) {
+				progress = fieldIdx
+				slice := ret.Elem().Field(fieldIdx)
+				slice = reflect.Append(slice, val)
+				ret.Elem().Field(fieldIdx).Set(slice)
+			} else {
+				// Duplicated
+				exists = false
+			}
+		} else {
+			// Out-of-order
+			exists = false
+		}
+		if !exists {
+			// Error handling
+		}
+	}
+	// Return the pointer to ret
+	return ret, nil
+}
+
+func extractTlvTag(f reflect.StructField) uint64 {
+	typStr, exists := f.Tag.Lookup("tlv")
+	if !exists {
+		return 0
+	}
+	typVal, err := strconv.ParseUint(typStr, 0, 0)
+	if err != nil {
+		panic(err)
+	}
+	return typVal
 }

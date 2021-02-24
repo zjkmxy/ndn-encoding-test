@@ -6,25 +6,49 @@ import (
 
 	"github.com/eric135/YaNFD/ndn"
 	"github.com/eric135/YaNFD/ndn/security"
+	"github.com/eric135/YaNFD/ndn/tlv"
 	"github.com/zjkmxy/ndn-encoding-test/benchmark"
 	"github.com/zjkmxy/ndn-encoding-test/codegen"
 	"github.com/zjkmxy/ndn-encoding-test/refl"
 )
 
+const (
+	testEncoding = false
+	testDecoding = true
+)
+
 func main() {
 	var cases []benchmark.Case
 
-	fmt.Printf("#1: 1000000 x 100B\n")
-	cases = benchmark.GenerateEncodingCases(1000000, 100, 0)
-	run(cases)
+	if testEncoding {
+		fmt.Printf("========== ENCODEING ==========\n")
+		fmt.Printf("#1: 1000000 x 100B\n")
+		cases = benchmark.GenerateEncodingCases(1000000, 100, 0)
+		run(cases)
 
-	fmt.Printf("#2: 45230 x 4000B\n")
-	cases = benchmark.GenerateEncodingCases(45230, 4000, 0)
-	run(cases)
+		fmt.Printf("#2: 1000000 x 4000B\n")
+		cases = benchmark.GenerateEncodingCases(1000000, 4000, 0)
+		run(cases)
 
-	fmt.Printf("#3: 1000000 x 1B, very long name\n")
-	cases = benchmark.GenerateEncodingCases(1000000, 1, 33)
-	run(cases)
+		fmt.Printf("#3: 1000000 x 10B, very long name\n")
+		cases = benchmark.GenerateEncodingCases(1000000, 10, 30)
+		run(cases)
+	}
+
+	if testDecoding {
+		fmt.Printf("\n========== DECODING ==========\n")
+		fmt.Printf("#1: 1000000 x 100B\n")
+		cases = benchmark.GenerateDecodingCases(1000000, 100, 0)
+		runDecoding(cases)
+
+		fmt.Printf("#2: 1000000 x 4000B\n")
+		cases = benchmark.GenerateDecodingCases(1000000, 4000, 0)
+		runDecoding(cases)
+
+		fmt.Printf("#3: 1000000 x 10B, very long name\n")
+		cases = benchmark.GenerateDecodingCases(1000000, 10, 30)
+		runDecoding(cases)
+	}
 
 	return
 }
@@ -35,6 +59,17 @@ func run(cases []benchmark.Case) {
 	tim, _ = benchmark.Execute(cases, reflEncode)
 	fmt.Printf("reflection: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, codegenEncode)
+	fmt.Printf("codegen: \t%v\n", tim)
+	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
+	fmt.Println()
+}
+
+func runDecoding(cases []benchmark.Case) {
+	tim, totalBytes := benchmark.Execute(cases, blockDecode)
+	fmt.Printf("block: \t\t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, reflDecode)
+	fmt.Printf("reflection: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, codegenDecode)
 	fmt.Printf("codegen: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
@@ -98,4 +133,32 @@ func codegenEncode(c benchmark.Case) int {
 	wire := data.Encode()
 	// fmt.Printf("%+v\n", wire)
 	return len(wire)
+}
+
+func blockDecode(c benchmark.Case) int {
+	wire, size, err := tlv.DecodeBlock(c.Payload)
+	if err != nil {
+		panic(err)
+	}
+	data, err := ndn.DecodeData(wire, false)
+	if data == nil || err != nil {
+		panic(err)
+	}
+	return int(size)
+}
+
+func codegenDecode(c benchmark.Case) int {
+	data := codegen.DecodeData(c.Payload)
+	if data == nil {
+		panic("Unable to parse data")
+	}
+	return len(c.Payload)
+}
+
+func reflDecode(c benchmark.Case) int {
+	data := refl.DecodeData(c.Payload)
+	if data == nil {
+		panic("Unable to parse data")
+	}
+	return len(c.Payload)
 }

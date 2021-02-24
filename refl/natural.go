@@ -48,3 +48,18 @@ func (v Natural) Encode(buf []byte) uint {
 	}
 	return pos + v.length
 }
+
+func ParseNatural(buf []byte) (uint64, error) {
+	switch len(buf) {
+	case 1:
+		return uint64(buf[0]), nil
+	case 2:
+		return uint64(binary.BigEndian.Uint16(buf)), nil
+	case 4:
+		return uint64(binary.BigEndian.Uint32(buf)), nil
+	case 8:
+		return uint64(binary.BigEndian.Uint64(buf)), nil
+	default:
+		return 0, &DecodeError{Msg: "Malformed natural number"}
+	}
+}

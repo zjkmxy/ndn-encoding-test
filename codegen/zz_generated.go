@@ -24,7 +24,7 @@ func (e *MetaInfoEncoder) init(v *MetaInfo) {
 		l += 9
 	}
 	l += 1
-	switch x := uint64(v.FreshnessPeriod/time.Millisecond); {
+	switch x := uint64(v.FreshnessPeriod / time.Millisecond); {
 	case x <= 0xff:
 		l += 2
 	case x <= 0xffff:
@@ -73,7 +73,7 @@ func (e *MetaInfoEncoder) encodeInto(v *MetaInfo, buf []byte) uint {
 	}
 	buf[pos] = 25
 	pos += 1
-	switch x := uint64(v.FreshnessPeriod/time.Millisecond); {
+	switch x := uint64(v.FreshnessPeriod / time.Millisecond); {
 	case x <= 0xff:
 		buf[pos] = 1
 		buf[pos+1] = byte(x)
@@ -113,6 +113,87 @@ func (e *MetaInfoEncoder) encodeInto(v *MetaInfo, buf []byte) uint {
 	copy(buf[pos:], v.FinalBlockID)
 	pos += uint(len(v.FinalBlockID))
 	return pos
+}
+
+func ParseMetaInfo(buf []byte, ignoreCritical bool) (*MetaInfo, uint) {
+	var pos uint = 0
+	var progress uint = 0
+	v := &MetaInfo{}
+	for pos < uint(len(buf)) {
+		var typ uint64 = 0
+		var l uint64 = 0
+		switch x := buf[pos]; {
+		case x <= 0xfc:
+			typ = uint64(buf[pos])
+			pos += 1
+		case x == 0xfd:
+			typ = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+			pos += 3
+		case x == 0xfe:
+			typ = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+			pos += 5
+		case x == 0xff:
+			typ = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+			pos += 9
+		}
+		switch x := buf[pos]; {
+		case x <= 0xfc:
+			l = uint64(buf[pos])
+			pos += 1
+		case x == 0xfd:
+			l = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+			pos += 3
+		case x == 0xfe:
+			l = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+			pos += 5
+		case x == 0xff:
+			l = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+			pos += 9
+		}
+		failFlag := false
+		switch {
+		case progress <= 0 && typ == 24:
+			progress = 0
+			switch l {
+			case 1:
+				v.ContentType = uint64(buf[pos])
+			case 2:
+				v.ContentType = uint64(binary.BigEndian.Uint16(buf[pos : pos+2]))
+			case 4:
+				v.ContentType = uint64(binary.BigEndian.Uint32(buf[pos : pos+4]))
+			case 8:
+				v.ContentType = uint64(binary.BigEndian.Uint64(buf[pos : pos+8]))
+			default:
+				failFlag = true
+			}
+		case progress <= 1 && typ == 25:
+			progress = 1
+			var timeInt uint64 = 0
+			switch l {
+			case 1:
+				timeInt = uint64(buf[pos])
+			case 2:
+				timeInt = uint64(binary.BigEndian.Uint16(buf[pos : pos+2]))
+			case 4:
+				timeInt = uint64(binary.BigEndian.Uint32(buf[pos : pos+4]))
+			case 8:
+				timeInt = uint64(binary.BigEndian.Uint64(buf[pos : pos+8]))
+			default:
+				failFlag = true
+			}
+			v.FreshnessPeriod = time.Duration(timeInt) * time.Millisecond
+		case progress <= 2 && typ == 26:
+			progress = 2
+			v.FinalBlockID = buf[pos : pos+uint(l)]
+		default:
+			failFlag = true
+		}
+		if failFlag && !ignoreCritical && ((typ <= 31) || ((typ & 1) == 1)) {
+			return nil, 0
+		}
+		pos += uint(l)
+	}
+	return v, pos
 }
 
 type SignatureInfoEncoder struct {
@@ -160,10 +241,72 @@ func (e *SignatureInfoEncoder) encodeInto(v *SignatureInfo, buf []byte) uint {
 	return pos
 }
 
+func ParseSignatureInfo(buf []byte, ignoreCritical bool) (*SignatureInfo, uint) {
+	var pos uint = 0
+	var progress uint = 0
+	v := &SignatureInfo{}
+	for pos < uint(len(buf)) {
+		var typ uint64 = 0
+		var l uint64 = 0
+		switch x := buf[pos]; {
+		case x <= 0xfc:
+			typ = uint64(buf[pos])
+			pos += 1
+		case x == 0xfd:
+			typ = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+			pos += 3
+		case x == 0xfe:
+			typ = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+			pos += 5
+		case x == 0xff:
+			typ = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+			pos += 9
+		}
+		switch x := buf[pos]; {
+		case x <= 0xfc:
+			l = uint64(buf[pos])
+			pos += 1
+		case x == 0xfd:
+			l = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+			pos += 3
+		case x == 0xfe:
+			l = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+			pos += 5
+		case x == 0xff:
+			l = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+			pos += 9
+		}
+		failFlag := false
+		switch {
+		case progress <= 0 && typ == 27:
+			progress = 0
+			switch l {
+			case 1:
+				v.SignatureType = uint64(buf[pos])
+			case 2:
+				v.SignatureType = uint64(binary.BigEndian.Uint16(buf[pos : pos+2]))
+			case 4:
+				v.SignatureType = uint64(binary.BigEndian.Uint32(buf[pos : pos+4]))
+			case 8:
+				v.SignatureType = uint64(binary.BigEndian.Uint64(buf[pos : pos+8]))
+			default:
+				failFlag = true
+			}
+		default:
+			failFlag = true
+		}
+		if failFlag && !ignoreCritical && ((typ <= 31) || ((typ & 1) == 1)) {
+			return nil, 0
+		}
+		pos += uint(l)
+	}
+	return v, pos
+}
+
 type DataEncoder struct {
-	length uint
-	Name_length uint
-	MetaInfo_encoder MetaInfoEncoder
+	length                uint
+	Name_length           uint
+	MetaInfo_encoder      MetaInfoEncoder
 	SignatureInfo_encoder SignatureInfoEncoder
 }
 
@@ -321,3 +464,110 @@ func (e *DataEncoder) encodeInto(v *Data, buf []byte) uint {
 	return pos
 }
 
+func ParseData(buf []byte, ignoreCritical bool) (*Data, uint) {
+	var pos uint = 0
+	var progress uint = 0
+	v := &Data{}
+	for pos < uint(len(buf)) {
+		var typ uint64 = 0
+		var l uint64 = 0
+		switch x := buf[pos]; {
+		case x <= 0xfc:
+			typ = uint64(buf[pos])
+			pos += 1
+		case x == 0xfd:
+			typ = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+			pos += 3
+		case x == 0xfe:
+			typ = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+			pos += 5
+		case x == 0xff:
+			typ = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+			pos += 9
+		}
+		switch x := buf[pos]; {
+		case x <= 0xfc:
+			l = uint64(buf[pos])
+			pos += 1
+		case x == 0xfd:
+			l = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+			pos += 3
+		case x == 0xfe:
+			l = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+			pos += 5
+		case x == 0xff:
+			l = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+			pos += 9
+		}
+		failFlag := false
+		switch {
+		case progress <= 0 && typ == 7:
+			progress = 0
+			v.Name = make([][]byte, 0)
+			endName := pos + uint(l)
+			startName := pos
+			for pos < endName {
+				var componentLen uint64 = 0
+				componentStart := pos
+				switch x := buf[pos]; {
+				case x <= 0xfc:
+					componentLen = uint64(buf[pos])
+					pos += 1
+				case x == 0xfd:
+					componentLen = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+					pos += 3
+				case x == 0xfe:
+					componentLen = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+					pos += 5
+				case x == 0xff:
+					componentLen = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+					pos += 9
+				}
+				switch x := buf[pos]; {
+				case x <= 0xfc:
+					componentLen = uint64(buf[pos])
+					pos += 1
+				case x == 0xfd:
+					componentLen = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))
+					pos += 3
+				case x == 0xfe:
+					componentLen = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))
+					pos += 5
+				case x == 0xff:
+					componentLen = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))
+					pos += 9
+				}
+				v.Name = append(v.Name, buf[componentStart:pos+uint(componentLen)])
+				pos += uint(componentLen)
+			}
+			pos = startName
+		case progress <= 1 && typ == 20:
+			progress = 1
+			struValue, _ := ParseMetaInfo(buf[pos:pos+uint(l)], ignoreCritical)
+			v.MetaInfo = struValue
+			if struValue == nil {
+				failFlag = true
+			}
+		case progress <= 2 && typ == 21:
+			progress = 2
+			v.Content = buf[pos : pos+uint(l)]
+		case progress <= 3 && typ == 22:
+			progress = 3
+			struValue, _ := ParseSignatureInfo(buf[pos:pos+uint(l)], ignoreCritical)
+			v.SignatureInfo = struValue
+			if struValue == nil {
+				failFlag = true
+			}
+		case progress <= 4 && typ == 23:
+			progress = 4
+			v.SignatureValue = buf[pos : pos+uint(l)]
+		default:
+			failFlag = true
+		}
+		if failFlag && !ignoreCritical && ((typ <= 31) || ((typ & 1) == 1)) {
+			return nil, 0
+		}
+		pos += uint(l)
+	}
+	return v, pos
+}

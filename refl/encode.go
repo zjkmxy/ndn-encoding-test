@@ -34,3 +34,39 @@ func GetField(typ TLVVar, value reflect.Value) TLVField {
 		panic("Unrecognized field")
 	}
 }
+
+func DecodeField(buf []byte, t reflect.Type) (reflect.Value, error) {
+	switch {
+	case t == reflect.TypeOf([]byte(nil)):
+		ret, err := ParseBinary(buf)
+		if err != nil {
+			return reflect.ValueOf(nil), err
+		}
+		return reflect.ValueOf(ret), nil
+	case t == reflect.TypeOf(time.Millisecond):
+		ret, err := ParseNatural(buf)
+		if err != nil {
+			return reflect.ValueOf(nil), err
+		}
+		return reflect.ValueOf(time.Duration(ret) * time.Millisecond), nil
+	case t == reflect.TypeOf(Name(nil)):
+		ret, err := ParseName(buf)
+		if err != nil {
+			return reflect.ValueOf(nil), err
+		}
+		return reflect.ValueOf(ret), nil
+	case t.Kind() == reflect.Uint64:
+		ret, err := ParseNatural(buf)
+		if err != nil {
+			return reflect.ValueOf(nil), err
+		}
+		return reflect.ValueOf(ret), nil
+	case t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct:
+		return ParseStruct(buf, t.Elem())
+	case t.Kind() == reflect.Slice && t.Elem().Kind() == reflect.Struct:
+		// The callee will append the return value to the slice, so no need to do anything
+		return ParseStruct(buf, t.Elem())
+	default:
+		return reflect.ValueOf(nil), &DecodeError{Msg: "Unrecognized field"}
+	}
+}

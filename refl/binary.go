@@ -24,3 +24,7 @@ func (v Binary) Encode(buf []byte) uint {
 	copy(buf[pos:pos+l], v.value)
 	return pos + l
 }
+
+func ParseBinary(buf []byte) ([]byte, error) {
+	return buf, nil
+}

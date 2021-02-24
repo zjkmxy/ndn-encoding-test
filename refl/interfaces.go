@@ -5,3 +5,11 @@ type TLVField interface {
 	Length() uint
 	Encode([]byte) uint
 }
+
+type DecodeError struct {
+	Msg string
+}
+
+func (e *DecodeError) Error() string {
+	return e.Msg
+}

@@ -40,3 +40,21 @@ func (v *Data) Encode() []byte {
 	sha.Sum(ret[0 : end+2])
 	return ret
 }
+
+func DecodeData(buf []byte) *Data {
+	typ, size := refl.DecodeTLVVar(buf)
+	if typ != 0x06 {
+		return nil
+	}
+	pos := size
+	l, size := refl.DecodeTLVVar(buf[pos:])
+	pos += size
+	if pos+uint(l) != uint(len(buf)) {
+		return nil
+	}
+	ret, l2 := ParseData(buf[pos:], false)
+	if uint(l) != l2 {
+		return nil
+	}
+	return ret
+}

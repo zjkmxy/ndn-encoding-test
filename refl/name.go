@@ -28,8 +28,8 @@ func NameFromStr(name string) Name {
 }
 
 type NameField struct {
-	typ TLVVar
-	value Name
+	typ    TLVVar
+	value  Name
 	length uint
 }
 
@@ -39,8 +39,8 @@ func NewNameField(typ TLVVar, value Name) NameField {
 		l += len(c)
 	}
 	return NameField{
-		typ: typ,
-		value: value,
+		typ:    typ,
+		value:  value,
 		length: uint(l),
 	}
 }
@@ -52,9 +52,23 @@ func (v NameField) Length() uint {
 func (v NameField) Encode(buf []byte) uint {
 	pos := v.typ.Encode(buf)
 	pos += TLVVar(v.length).Encode(buf[pos:])
-	for _,c := range v.value {
+	for _, c := range v.value {
 		copy(buf[pos:], c)
 		pos += uint(len(c))
 	}
 	return pos
+}
+
+func ParseName(buf []byte) (Name, error) {
+	pos := 0
+	ret := make([]NameComponent, 0)
+	for pos < len(buf) {
+		_, size1 := DecodeTLVVar(buf[pos:])
+		l, size2 := DecodeTLVVar(buf[pos+int(size1):])
+		totalLen := int(size1) + int(size2) + int(l)
+		component := buf[pos : pos+totalLen]
+		ret = append(ret, component)
+		pos += totalLen
+	}
+	return ret, nil
 }

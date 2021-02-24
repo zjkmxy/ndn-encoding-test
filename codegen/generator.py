@@ -12,6 +12,10 @@ def type_num_len(type_num):
     return 9
 
 
+def is_critical():
+  return "((typ <= 31) || ((typ & 1) == 1))"
+
+
 def natural_number_len(code, is_tlv):
   print(f'\tswitch x := {code}; {{')
   if is_tlv:
@@ -65,6 +69,40 @@ def natural_number_encode(code, is_tlv):
   print(f'\t}}')
 
 
+def tlv_number_decode(code):
+  # TODO: Should check the length.
+  print(f'\t\tswitch x := buf[pos]; {{')
+  print(f'\t\tcase x <= 0xfc:')
+  print(f'\t\t\t{code} = uint64(buf[pos])')
+  print(f'\t\t\tpos += 1')
+  print(f'\t\tcase x == 0xfd:')
+  print(f'\t\t\t{code} = uint64(binary.BigEndian.Uint16(buf[pos+1 : pos+3]))')
+  print(f'\t\t\tpos += 3')
+  print(f'\t\tcase x == 0xfe:')
+  print(f'\t\t\t{code} = uint64(binary.BigEndian.Uint32(buf[pos+1 : pos+5]))')
+  print(f'\t\t\tpos += 5')
+  print(f'\t\tcase x == 0xff:')
+  print(f'\t\t\t{code} = uint64(binary.BigEndian.Uint64(buf[pos+1 : pos+9]))')
+  print(f'\t\t\tpos += 9')
+  print(f'\t\t}}')
+
+
+def natural_number_decode(code):
+  print(f'\t\t\tswitch l {{')
+  print(f'\t\t\tcase 1:')
+  print(f'\t\t\t\t{code} = uint64(buf[pos])')
+  print(f'\t\t\tcase 2:')
+  print(f'\t\t\t\t{code} = uint64(binary.BigEndian.Uint16(buf[pos : pos+2]))')
+  print(f'\t\t\tcase 4:')
+  print(f'\t\t\t\t{code} = uint64(binary.BigEndian.Uint32(buf[pos : pos+4]))')
+  print(f'\t\t\tcase 8:')
+  print(f'\t\t\t\t{code} = uint64(binary.BigEndian.Uint64(buf[pos : pos+8]))')
+  print(f'\t\t\tdefault:')
+  # Failed
+  print(f'\t\t\t\tfailFlag = true')
+  print(f'\t\t\t}}')
+
+
 class Field:
   name: str
   type_num: int
@@ -102,6 +140,9 @@ class Field:
   def initialize_encoder_struct(self):
     pass
 
+  def generate_decode_from(self):
+    pass
+
 
 class NaturalField(Field):
   def generate_length(self):
@@ -112,6 +153,8 @@ class NaturalField(Field):
     self.encode_type_num()
     natural_number_encode(f'v.{self.name}', False)
 
+  def generate_decode_from(self):
+    natural_number_decode(f'v.{self.name}')
 
 class TimeField(Field):
   def generate_length(self):
@@ -122,6 +165,10 @@ class TimeField(Field):
     self.encode_type_num()
     natural_number_encode(f'uint64(v.{self.name}/time.Millisecond)', False)
 
+  def generate_decode_from(self):
+    print(f'\t\t\tvar timeInt uint64 = 0')
+    natural_number_decode('timeInt')
+    print(f'\t\t\tv.{self.name} = time.Duration(timeInt) * time.Millisecond')
 
 
 class BinaryField(Field):
@@ -136,6 +183,9 @@ class BinaryField(Field):
     print(f'\tcopy(buf[pos:], v.{self.name})')
     print(f'\tpos += uint(len(v.{self.name}))')
 
+  def generate_decode_from(self):
+    print(f'\t\t\tv.{self.name} = buf[pos : pos+uint(l)]')
+
 
 class SignatureField(Field):
   def generate_length(self):
@@ -147,6 +197,8 @@ class SignatureField(Field):
     print(f'\tbuf[pos] = 32')
     print(f'\tpos += 33')
 
+  def generate_decode_from(self):
+    print(f'\t\t\tv.{self.name} = buf[pos : pos+uint(l)]')
 
 
 class NameField(Field):
@@ -172,6 +224,20 @@ class NameField(Field):
     print(f'\t\tpos += uint(len(c))')
     print(f'\t}}')
 
+  def generate_decode_from(self):
+    print(f'\t\t\tv.{self.name} = make([][]byte, 0)')
+    print(f'\t\t\tendName := pos + uint(l)')
+    print(f'\t\t\tstartName := pos')
+    print(f'\t\t\tfor pos < endName {{')
+    print(f'\t\t\t\tvar componentLen uint64 = 0')
+    print(f'\t\t\t\tcomponentStart := pos')
+    tlv_number_decode('componentLen')  # ComponentType
+    tlv_number_decode('componentLen')
+    print(f'\t\t\t\tv.{self.name} = append(v.{self.name}, buf[componentStart : pos+uint(componentLen)])')
+    print(f'\t\t\t\tpos += uint(componentLen)')
+    print(f'\t\t\t}}')
+    print(f'\t\t\tpos = startName')
+
 
 class StructField(Field):
   def __init__(self, name, type_num, struct_class):
@@ -194,6 +260,13 @@ class StructField(Field):
     self.encode_type_num()
     natural_number_encode(f'e.{self.name}_encoder.length', True)
     print(f'\tpos += e.{self.name}_encoder.encodeInto(v.{self.name}, buf[pos:])')
+
+  def generate_decode_from(self):
+    print(f'\t\t\tstruValue, _ := Parse{self.struct_class}(buf[pos : pos+uint(l)], ignoreCritical)')
+    print(f'\t\t\tv.{self.name} = struValue')
+    print(f'\t\t\tif struValue == nil {{')
+    print(f'\t\t\t\tfailFlag = true')
+    print(f'\t\t\t}}')
 
 
 class TLVStruct:
@@ -226,12 +299,43 @@ class TLVStruct:
     print(f'\treturn pos')
     print(f'}}')
 
+  def generate_decode_from(self):
+    # TODO: Should return an error
+    print(f'func Parse{self.name}(buf []byte, ignoreCritical bool) (*{self.name}, uint) {{')
+    print(f'\tvar pos uint = 0')
+    print(f'\tvar progress uint = -1')
+    print(f'\tv := &{self.name}{{}}')
+    print(f'\tfor pos < uint(len(buf)) {{')
+    print(f'\t\tvar typ uint64 = 0')
+    print(f'\t\tvar l uint64 = 0')
+    tlv_number_decode('typ')
+    tlv_number_decode('l')
+    print(f'\t\tfailFlag := false')
+    print(f'\t\tswitch {{')
+    for i, f in enumerate(self.fields):
+      # TODO: sequence
+      print(f'\t\tcase progress < {i} && typ == {f.type_num}:')
+      print(f'\t\t\tprogress = {i}')
+      f.generate_decode_from()
+    print(f'\t\tdefault:')
+    print(f'\t\t\tfailFlag = true')
+    print(f'\t\t}}')  # End switch
+    print(f'\t\tif failFlag && !ignoreCritical && {is_critical()} {{')
+    print(f'\t\t\treturn nil, 0')
+    print(f'\t\t}}')  # End if
+    print(f'\t\tpos += uint(l)')
+    print(f'\t}}')  # End for
+    print(f'\treturn v, pos')
+    print(f'}}')  # End func
+
   def generate(self):
     self.generate_encoder_struct()
     print()
     self.initialize_encoder_struct()
     print()
     self.generate_encode_into()
+    print()
+    self.generate_decode_from()
     print()
 
 

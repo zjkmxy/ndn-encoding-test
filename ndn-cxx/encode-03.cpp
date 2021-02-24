@@ -18,7 +18,7 @@ void encode(string name){
   data.setFreshnessPeriod(4000_ms);
   data.setContentType(0);
   data.setFinalBlock(name::Component("10000"));
-  data.setContent(buf, 100);
+  data.setContent(buf, 10);
   keyChain.sign(data, signingWithSha256());
   ptr = data.wireEncode().wire();
 }
@@ -26,7 +26,7 @@ void encode(string name){
 int main(int argc, char* argv[]){
   char str[100];
   for(int i = 0; i < 1000000; i ++){
-    sprintf(str, "/go-ndn/test/%d", i);
+    sprintf(str, "/go-ndn/test/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/a/%010d", i);
     encode(string(str));
   }
   return 0;
