@@ -8,21 +8,30 @@ import (
 )
 
 type MetaInfo struct {
-	ContentType     uint64             `tlv:"0x18"`
-	FreshnessPeriod time.Duration      `tlv:"0x19"`
-	FinalBlockID    refl.NameComponent `tlv:"0x1a"`
+	//+field:natural
+	ContentType uint64 `tlv:"0x18"`
+	//+field:time
+	FreshnessPeriod time.Duration `tlv:"0x19"`
+	//+field:binary
+	FinalBlockID refl.NameComponent `tlv:"0x1a"`
 }
 
 type SignatureInfo struct {
+	//+field:natural
 	SignatureType uint64 `tlv:"0x1b"`
 }
 
 type Data struct {
-	Name           refl.Name      `tlv:"0x07"`
-	MetaInfo       *MetaInfo      `tlv:"0x14"`
-	Content        []byte         `tlv:"0x15"`
-	SignatureInfo  *SignatureInfo `tlv:"0x16"`
-	SignatureValue []byte         `tlv:"0x17"`
+	//+field:name
+	Name refl.Name `tlv:"0x07"`
+	//+field:struct:MetaInfo
+	MetaInfo *MetaInfo `tlv:"0x14"`
+	//+field:binary
+	Content []byte `tlv:"0x15"`
+	//+field:struct:SignatureInfo
+	SignatureInfo *SignatureInfo `tlv:"0x16"`
+	//+field:signature
+	SignatureValue []byte `tlv:"0x17"`
 }
 
 func (v *Data) Encode() []byte {

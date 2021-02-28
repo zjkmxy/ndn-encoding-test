@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	testEncoding = false
+	testEncoding = true
 	testDecoding = true
 )
 

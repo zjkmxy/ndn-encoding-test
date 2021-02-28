@@ -21,7 +21,7 @@ void encode(std::string name){
 int main() {
   char str[100];
   for(int i = 0; i < 1000000; i ++){
-    sprintf(str, "/go-ndn/test/%d", i);
+    sprintf(str, "/go-ndn/test/%010d", i);
     encode(std::string(str));
   }
   return 0;

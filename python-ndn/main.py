@@ -4,7 +4,7 @@ from ndn.security.signer import DigestSha256Signer
 
 
 def one_run(i: int):
-    name = f"/go-ndn/test/{i}"
+    name = f"/go-ndn/test/{i:010}"
     content = bytes(100)
     make_data(name, MetaInfo(0, 4000, Component.from_str("10000")), content, DigestSha256Signer())
 
