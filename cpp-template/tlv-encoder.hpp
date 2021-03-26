@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstddef>
+#include <cstring>
 #include <type_traits>
 #include <list>
 #include <tuple>
@@ -297,7 +298,8 @@ struct ByteString {
     return value.size();
   }
   inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
-    std::copy_n(value.begin(), value.size(), buf);
+    // std::copy_n(value.begin(), value.size(), buf);
+    memcpy(buf, value.begin(), value.size());
     return value.size();
   }
   static inline ParseResult<Vector> Parse(const Buffer& wire) {
@@ -315,7 +317,8 @@ struct NameComponentEncoder {
     return value.size();
   }
   inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
-    std::copy_n(value.begin(), value.size(), buf);
+    // std::copy_n(value.begin(), value.size(), buf);
+    memcpy(buf, value.begin(), value.size());
     return value.size();
   }
   static inline ParseResult<NameComponent> Parse(const Buffer& wire) {
@@ -654,7 +657,7 @@ using StructFieldOpt = Field<Model,
 // Note: an interesting fact is, the most time consuming part of the whole experiment is new() called by this function.
 // Well, copying is necessary for this function.
 // But for other usage, should we change to something like Go slice? (Seems that C++20 borrowed_range does not work)
-NameComponent GenericNameComponent(const std::string_view& str){
+inline NameComponent GenericNameComponent(const std::string_view& str){
   TlvBlock<8, std::string_view, ByteString<std::string_view>> encodable(str);
   size_t size = encodable.EncodeSize();
   Buffer ret(size);
@@ -664,7 +667,7 @@ NameComponent GenericNameComponent(const std::string_view& str){
 
 // NameFromString encodes a Name from a string. Implemented quickly, without support of naming conventions.
 // Assume str starts with a "/" and does not ent with a "/".
-Name NameFromString(const std::string_view& str){
+inline Name NameFromString(const std::string_view& str){
   auto start = 1UL;
   auto end = str.find("/", start);
   size_t cnt = 0;
@@ -687,7 +690,7 @@ Name NameFromString(const std::string_view& str){
   return ret;
 }
 
-std::string NameComponentString(NameComponent component){
+inline std::string NameComponentString(NameComponent component){
   size_t pos = 0;
   const auto& [typ, tsiz] = TlvVar::Parse(component);
   pos += tsiz;
@@ -696,7 +699,7 @@ std::string NameComponentString(NameComponent component){
   return std::string(component.begin() + pos, component.begin() + component.size());
 }
 
-std::string NameToString(const Name& name){
+inline std::string NameToString(const Name& name){
   std::string ret = "";
   for(size_t i = 0, sz = name.size(); i < sz; i ++){
     ret += "/" + NameComponentString(name[i]);
