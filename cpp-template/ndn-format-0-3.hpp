@@ -34,6 +34,10 @@ struct SignatureValueEncodable {
   inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
     return 32;
   }
+
+  static inline ParseResult<Vector> Parse(const Buffer& wire) {
+    return {wire, wire.size()};
+  }
 };
 
 struct Data {
@@ -68,6 +72,24 @@ struct Data {
     ctx.update(ret.data() + pos, size - pos - 32);
     ctx.final(ret.data() + size - 32);
 
+    return ret;
+  }
+
+  static std::optional<Data> Parse(Buffer wire) {
+    size_t pos = 0;
+    const auto& [typ, tsiz] = TlvConst<0x06>::Parse(wire);
+    pos += tsiz;
+    if(!typ){
+      return std::nullopt;
+    }
+
+    const auto& [length, lsiz] = TlvVar::Parse(wire.range(pos, wire.size()));
+    pos += lsiz;
+    if(!length || pos + length.value() > wire.size()){
+      return std::nullopt;
+    }
+
+    const auto& [ret, vsiz] = Encodable::Parse(wire.range(pos, pos+length.value()));
     return ret;
   }
 };

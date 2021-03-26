@@ -29,6 +29,14 @@ public:
   Slice(const Slice&) = default;
   Slice(Slice&&) = default;
 
+  Slice& operator=(const Slice&& other){
+    ptr = std::move(other.ptr);
+    start = other.start;
+    len = other.len;
+    cap = other.cap;
+    return *this;
+  }
+
   size_t size() const {
     return len;
   }
@@ -50,8 +58,8 @@ public:
     }
   }
   
-  Slice& range(size_t first, size_t last) const {
-    if(last < first || start + last > cap){
+  Slice range(size_t first, size_t last) const {
+    if(last < first || last > cap){
       std::ostringstream stringStream;
       if(last < first){
         stringStream << "IndexError: [" << first << ", " << last << "] is not a legal range.";
@@ -62,7 +70,7 @@ public:
     }
     return Slice(ptr, start + first, last - first, cap - first);
   }
-  
+
   T& operator[](size_t index) {
     return ptr[start + index];
   }

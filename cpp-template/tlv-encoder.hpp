@@ -21,17 +21,33 @@ namespace tlv {
 using NameComponent = Buffer;
 using Name = std::vector<Buffer>;
 
+// The result of parsing. Theoretically, it should be Optional<Tuple<T, size_t>>.
+// This definition is for coding convenience.
+template<typename T>
+using ParseResult = std::tuple<std::optional<T>, size_t>;
+
 #ifdef __cpp_concepts
 template<typename T>
 concept EncodableType =
-  requires(T e, uint8_t* buf, size_t buflen) {
+  requires(T e, uint8_t* buf, size_t buflen, const Buffer& wire) {
     // EncodeSize returns the expected length after encoding
     { e.EncodeSize() } -> std::convertible_to<size_t>;
 
     // EncodeInto encodes the object into buf.
     // buflen is not checked in this quick and dirty implementation.
     // The actually used size is returned.
-    { e.EncodeInto(buf, buflen) } -> std::convertible_to<bool>;
+    { e.EncodeInto(buf, buflen) } -> std::convertible_to<size_t>;
+
+    // From <Monadic Parsing>
+    // "A parser for things
+    //  Is a function from strings
+    //  To lists of pairs
+    //  Of things and strings"
+    // Here we did several changes:
+    // 1. List is changed to std::optional, for determinism
+    // 2. Strings are byte strings
+    // 3. Return value is things + parsed length, instead of things + remaining buffer
+    T::Parse(wire);
   };
 
 template<typename T>
@@ -43,9 +59,10 @@ concept ModelType =
 
 template<typename T, typename Encodable>
 concept Encodes =
-  requires(T value) {
+  requires(T value, const Buffer& wire) {
     EncodableType<Encodable>;
     Encodable(value);
+    { Encodable::Parse(wire) } -> std::convertible_to<ParseResult<T>>;
   };
 
 #define REQUIRES_ENCODE(t, e) requires Encodes<t, e>
@@ -125,6 +142,27 @@ struct TlvConst {
       return 9;
     }
   }
+
+  static inline ParseResult<uint64_t> Parse(const Buffer& wire) {
+    if constexpr (num <= 0xfc){
+      if (wire.size() >= 1 && wire[0] == uint8_t(num)){
+        return {num, 1};
+      }
+    } else if constexpr (num <= 0xffff){
+      if (wire.size() >= 3 && wire[0] == 0xfd && big_endian::ReadWord(&wire[1]) == uint16_t(num)){
+        return {num, 3};
+      }
+    } else if constexpr (num <= 0xffffffff){
+      if (wire.size() >= 5 && wire[0] == 0xfe && big_endian::ReadDword(&wire[1]) == uint32_t(num)){
+        return {num, 5};
+      }
+    } else {
+      if (wire.size() >= 9 && wire[0] == 0xff && big_endian::ReadQword(&wire[1]) == num){
+        return {num, 9};
+      }
+    }
+    return {std::nullopt, 0};
+  }
 };
 
 // TlvVar is a TLV type number variable.
@@ -162,6 +200,28 @@ struct TlvVar {
       return 9;
     }
   }
+
+  static inline ParseResult<uint64_t> Parse(const Buffer& wire) {
+    if (wire.size() >= 1) {
+      uint8_t val = wire[0];
+      if (val <= 0xfc){
+        return {uint64_t(val), 1};
+      } else if (val == 0xfd){
+        if (wire.size() >= 3){
+          return {uint64_t(big_endian::ReadWord(&wire[1])), 3};
+        }
+      } else if (val == 0xfe){
+        if (wire.size() >= 5){
+          return {uint64_t(big_endian::ReadDword(&wire[1])), 5};
+        }
+      } else if (val == 0xff){
+        if (wire.size() >= 9){
+          return {big_endian::ReadQword(&wire[1]), 9};
+        }
+      }
+    }
+    return {std::nullopt, 0};
+  }
 };
 
 // NaturalNumber is a natural number, without type and length.
@@ -196,6 +256,20 @@ struct NaturalNumber {
       return 8;
     }
   }
+
+  static inline ParseResult<uint64_t> Parse(const Buffer& wire) {
+    // Require exact size
+    if (wire.size() == 1){
+      return {uint64_t(wire[0]), 1};
+    } else if (wire.size() == 2){
+      return {uint64_t(big_endian::ReadWord(wire.begin())), 2};
+    } else if (wire.size() == 4){
+      return {uint64_t(big_endian::ReadDword(wire.begin())), 4};
+    } else if (wire.size() == 8){
+      return {big_endian::ReadQword(wire.begin()), 8};
+    }
+    return {std::nullopt, 0};
+  }
 };
 
 // Unit is void type.
@@ -207,6 +281,10 @@ struct Unit {
   }
   constexpr size_t EncodeInto(uint8_t* buf, size_t buflen) const {
     return 0;
+  }
+
+  static inline ParseResult<bool> Parse(const Buffer& wire) {
+    return {true, 0};
   }
 };
 
@@ -221,6 +299,41 @@ struct ByteString {
   inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
     std::copy_n(value.begin(), value.size(), buf);
     return value.size();
+  }
+  static inline ParseResult<Vector> Parse(const Buffer& wire) {
+    // Require exact size
+    return {wire, wire.size()};
+  }
+};
+
+// NameComponentEncoder is the same as ByteString,
+// except that its Parse() reads exactly one TlvBlock instead of greedy.
+struct NameComponentEncoder {
+  const NameComponent& value;
+  inline NameComponentEncoder(const NameComponent& value):value(value){}
+  inline size_t EncodeSize() const {
+    return value.size();
+  }
+  inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
+    std::copy_n(value.begin(), value.size(), buf);
+    return value.size();
+  }
+  static inline ParseResult<NameComponent> Parse(const Buffer& wire) {
+    // Read a TLV block
+    size_t pos = 0;
+    const auto& [typ, tsiz] = TlvVar::Parse(wire);
+    pos += tsiz;
+    if(!typ){
+      return {std::nullopt, 0};
+    }
+    const auto& [length, lsiz] = TlvVar::Parse(wire.range(pos, wire.size()));
+    pos += lsiz;
+    size_t total_size = pos + length.value();
+    if(!length || total_size > wire.size()){
+      return {std::nullopt, 0};
+    }
+
+    return {wire.range(0, total_size), total_size};
   }
 };
 
@@ -253,6 +366,23 @@ struct Sequence {
     }
     return pos;
   }
+
+  static inline ParseResult<std::vector<T>> Parse(const Buffer& wire) {
+    // This does a greedy parsing.
+    // T must be able to handle its own size
+    std::vector<T> ret;
+    size_t pos = 0;
+    while(pos < wire.size()){
+      const auto& [val, siz] = Encodable::Parse(wire.range(pos, wire.size()));
+      if(val){
+        ret.push_back(std::move(val.value()));
+        pos += siz;
+      } else {
+        break;
+      }
+    }
+    return {ret, pos};
+  }
 };
 
 // TlvBlock encapsulate an encodable into a block with type and length.
@@ -272,6 +402,25 @@ struct TlvBlock {
     ret += TlvVar(length).EncodeInto(buf + ret, buflen - ret);
     ret += encodable.EncodeInto(buf + ret, buflen - ret);
     return ret;
+  }
+  static inline ParseResult<T> Parse(const Buffer& wire) {
+    size_t pos = 0;
+    const auto& [typ, tsiz] = TlvConst<typeNum>::Parse(wire);
+    pos += tsiz;
+    if(!typ){
+      return {std::nullopt, 0};
+    }
+    const auto& [length, lsiz] = TlvVar::Parse(wire.range(pos, wire.size()));
+    pos += lsiz;
+    if(!length || pos + length.value() > wire.size()){
+      return {std::nullopt, 0};
+    }
+    const auto& [value, vsiz] = Encodable::Parse(wire.range(pos, pos+length.value()));
+    pos += length.value();
+    if(!value){
+      return {std::nullopt, 0};
+    }
+    return {value, pos};
   }
 };
 
@@ -303,6 +452,14 @@ struct OptionalBlock {
     }
     return ret;
   }
+  static inline ParseResult<std::optional<T>> Parse(const Buffer& wire) {
+    const auto& [ret, len] = TlvBlock<typeNum, T, Encodable>::Parse(wire);
+    if(ret){
+      return {ret, len};
+    } else {
+      return {std::make_optional<std::optional<T>>(std::nullopt), 0};
+    }
+  }
 };
 
 // Boolean is a bool such as MustBeFresh.
@@ -324,23 +481,64 @@ struct Boolean {
   inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
     return value.EncodeInto(buf, buflen);
   }
+
+  static inline ParseResult<bool> Parse(const Buffer& wire) {
+    const auto& [ret, len] = OptionalBlock<typeNum, Unit, Unit>::Parse(wire);
+    if(!ret.has_value()){
+      return {false, 0};
+    } else {
+      return {true, len};
+    }
+  }
 };
 
 // Field wraps an encodable into a field of a struct or class.
 // Model is the class of TLV model, i.e. the struct holding this field.
 // Encodable is the class of original encodable, typically a TlvBlock or OptionalBlock.
-// Args are arguments that used to initialize the encodable, in the form of offsets.
+// Offset is the offset to the field.
 // For example, to initialize Encodable(m.a), we need to write
 //   StructField<Model, Encodable, &Model::a>
-template<typename Model, EncodableType Encodable, auto ...args>
+template<typename Model, EncodableType Encodable, auto offset>
 struct Field {
   Encodable encodable;
-  inline Field(const Model& model):encodable(model.*args...){}
+  inline Field(const Model& model):encodable(model.*offset){}
   inline size_t EncodeSize() const {
     return encodable.EncodeSize();
   }
   inline size_t EncodeInto(uint8_t* buf, size_t buflen) const {
     return encodable.EncodeInto(buf, buflen);
+  }
+
+  template<typename T>
+  static inline void replace(Model& model, std::optional<T> value){
+    if(value.has_value()){
+      (model.*offset).emplace(*value);
+    } else {
+      (model.*offset) = std::nullopt;
+    }
+  }
+
+  template<typename T>
+  static inline void replace(Model& model, T&& value){
+    (model.*offset) = std::move(value);
+  }
+
+  // Field itself is not an Encodable, so no need to implement Parse()
+  // The value is assigned to the specified model, so only length is returned
+  // This template version handles std::optional
+  static inline std::optional<size_t> ParseField(const Buffer& wire, Model& model) {
+    auto [val, len] = Encodable::Parse(wire);
+    if(val.has_value()){
+      // Assign to the field if success
+      // Optional field returns a make_optional(std::null_opt) when missing,
+      // so it will be treated as success.
+      replace(model, val.value());
+      return len;
+    } else {
+      // Failed to parse the field
+      // This leads to failing to parse the whole struct
+      return std::nullopt;
+    }
   }
 };
 
@@ -391,6 +589,38 @@ struct Struct {
     Buffer ret(length);
     EncodeInto(ret.data(), length);
     return ret;
+  }
+
+  // Struct is an Encodable. It must implement the standard Parse()
+  // So its field parsing function is renamed as ParseField
+  template<typename Field>
+  static inline std::optional<size_t>
+  ParseField(const Buffer& wire, Model& model) {
+    return Field::ParseField(wire, model);
+  }
+
+  template<typename Field, typename Field2, typename ...MoreFields>
+  static inline std::optional<size_t>
+  ParseField(const Buffer& wire, Model& model) {
+    auto pos = Field::ParseField(wire, model);
+    if(!pos.has_value()){
+      return std::nullopt;
+    }
+    auto rest = ParseField<Field2, MoreFields...>(wire.range(pos.value(), wire.size()), model);
+    if(!rest.has_value()){
+      return std::nullopt;
+    }
+    return pos.value() + rest.value();
+  }
+
+  static inline ParseResult<Model> Parse(const Buffer& wire) {
+    Model ret;
+    std::optional<size_t> pos = ParseField<Fields...>(wire, ret);
+    if(pos.has_value()){
+      return {std::make_optional<Model>(std::move(ret)), pos.value()};
+    } else {
+      return {std::nullopt, 0};
+    }
   }
 };
 
@@ -457,7 +687,27 @@ Name NameFromString(const std::string_view& str){
   return ret;
 }
 
-using EncodableName = Sequence<Buffer, ByteString<Buffer>>;
+std::string NameComponentString(NameComponent component){
+  size_t pos = 0;
+  const auto& [typ, tsiz] = TlvVar::Parse(component);
+  pos += tsiz;
+  const auto& [length, lsiz] = TlvVar::Parse(component.range(pos, component.size()));
+  pos += lsiz;
+  return std::string(component.begin() + pos, component.begin() + component.size());
+}
+
+std::string NameToString(const Name& name){
+  std::string ret = "";
+  for(size_t i = 0, sz = name.size(); i < sz; i ++){
+    ret += "/" + NameComponentString(name[i]);
+  }
+  if(ret == ""){
+    ret = "/";
+  }
+  return ret;
+}
+
+using EncodableName = Sequence<Buffer, NameComponentEncoder>;
 
 template<uint64_t typeNum, typename Model, Name Model::* offset>
 using NameField = Field<Model, TlvBlock<typeNum, Name, EncodableName>, offset>;
