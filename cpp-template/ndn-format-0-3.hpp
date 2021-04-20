@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tlv-encoder.hpp"
-#include "sha256/sha256.h"
+#include "openssl/sha.h"
 
 namespace ndn {
 
@@ -67,10 +67,10 @@ struct Data {
     pos += length.EncodeInto(ret.data() + pos, size - pos);
     data.EncodeInto(ret.data() + pos, size - pos);
 
-    SHA256 ctx = SHA256();
-    ctx.init();
-    ctx.update(ret.data() + pos, size - pos - 32);
-    ctx.final(ret.data() + size - 32);
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, ret.data() + pos, size - pos - 32);
+    SHA256_Final(ret.data() + size - 32, &ctx);
 
     return ret;
   }

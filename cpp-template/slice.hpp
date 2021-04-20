@@ -29,6 +29,10 @@ public:
   Slice(const Slice&) = default;
   Slice(Slice&&) = default;
 
+  Slice(std::initializer_list<T> list): ptr(new T[list.size()]), start(0), len(list.size()), cap(list.size()) {
+    std::copy(list.begin(), list.end(), &ptr[0]);
+  }
+
   Slice& operator=(const Slice&& other){
     ptr = std::move(other.ptr);
     start = other.start;

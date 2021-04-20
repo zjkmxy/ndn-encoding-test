@@ -10,8 +10,13 @@ using security::signingWithSha256;
 
 KeyChain keyChain;
 
-void decode(){
-  static uint8_t buf[] =
+void decode(ConstBufferPtr buf){
+  Data data;
+  data.wireDecode(Block(buf));
+}
+
+int main(int argc, char* argv[]){
+  ConstBufferPtr buf = make_shared<const Buffer>(std::initializer_list<uint8_t>(
     {6, 253, 15, 249, 7, 26, 8, 6, 103, 111, 45, 110, 100, 110, 8, 4, 116, 101, 115, 116,
     8, 10, 48, 48, 48, 48, 48, 48, 48, 48, 48, 49, 20, 16, 24, 1, 0, 25, 2, 15,
     160, 26, 7, 8, 5, 49, 48, 48, 48, 48, 21, 253, 15, 160, 82, 253, 252, 7, 33, 130,
@@ -216,15 +221,10 @@ void decode(){
     6, 59, 65, 3, 156, 116, 3, 107, 91, 61, 168, 177, 160, 185, 49, 53, 167, 16, 53, 45,
     160, 246, 195, 18, 3, 160, 157, 31, 35, 41, 101, 27, 179, 171, 22, 3, 27, 1, 0, 23,
     32, 163, 60, 194, 104, 248, 118, 79, 231, 250, 185, 231, 57, 251, 224, 71, 220, 255, 220, 10,
-    60, 77, 181, 242, 75, 60, 83, 208, 210, 38, 129, 234, 198};
+    60, 77, 181, 242, 75, 60, 83, 208, 210, 38, 129, 234, 198}));
 
-  Data data;
-  data.wireDecode(Block(buf, sizeof(buf)));
-}
-
-int main(int argc, char* argv[]){
   for(int i = 0; i < 1000000; i ++){
-    decode();
+    decode(buf);
   }
   return 0;
 }
