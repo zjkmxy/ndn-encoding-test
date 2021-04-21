@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include <optional>
-#ifdef __cpp_concepts
+#if defined(__cpp_concepts) && defined(__GNUC__) && (__GNUC__ >= 10)
 #include <concepts>
 #endif
 #include "slice.hpp"
@@ -27,7 +27,7 @@ using Name = std::vector<Buffer>;
 template<typename T>
 using ParseResult = std::tuple<std::optional<T>, size_t>;
 
-#ifdef __cpp_concepts
+#if defined(__cpp_concepts) && defined(__GNUC__) && (__GNUC__ >= 10)
 template<typename T>
 concept EncodableType =
   requires(T e, uint8_t* buf, size_t buflen, const Buffer& wire) {

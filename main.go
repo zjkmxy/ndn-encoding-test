@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	testEncoding = false
+	testEncoding = true
 	testDecoding = true
 )
 
@@ -65,10 +65,10 @@ func run(cases []benchmark.Case) {
 func runDecoding(cases []benchmark.Case) {
 	tim, totalBytes := benchmark.Execute(cases, blockDecode)
 	fmt.Printf("block: \t\t%v\n", tim)
-	// tim, _ = benchmark.Execute(cases, reflDecode)
-	// fmt.Printf("reflection: \t%v\n", tim)
-	// tim, _ = benchmark.Execute(cases, codegenDecode)
-	// fmt.Printf("codegen: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, reflDecode)
+	fmt.Printf("reflection: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, codegenDecode)
+	fmt.Printf("codegen: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
 }
