@@ -1,8 +1,8 @@
 COMPILER = g++-10
 # COMPILER = /usr/local/opt/llvm/bin/clang++
-INCL_PATHS = -I/usr/local/opt/openssl@1.1/include -L/usr/local/opt/openssl@1.1/lib -lcrypto
-CFLAGS = -Wall -O3
-CFLAGS_DBG = -Wall -ggdb -O0
+INCL_PATHS = -I/usr/local/opt/openssl@1.1/include -L/usr/local/opt/openssl@1.1/lib
+CFLAGS = -Wall -O3 -lcrypto -lssl
+CFLAGS_DBG = -Wall -ggdb -O0 -lcrypto -lssl
 
 all: encode-01 encode-02 encode-03 decode-01 decode-02 decode-03
 

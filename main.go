@@ -21,7 +21,7 @@ func main() {
 	var cases []benchmark.Case
 
 	if testEncoding {
-		fmt.Printf("========== ENCODEING ==========\n")
+		fmt.Printf("========== ENCODING ==========\n")
 		fmt.Printf("#1: 1000000 x 100B\n")
 		cases = benchmark.GenerateEncodingCases(1000000, 100, 0)
 		run(cases)
