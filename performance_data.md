@@ -20,9 +20,13 @@ Environments
 Summary
 -------
 
+### Performance Time
+
+Total time for `10^6` packets.
+
 |              | Enc 1       | Enc 2       | Enc 3       | Dec 1      | Dec 2      | Dec 3       |
 |--------------|-------------|-------------|-------------|------------|------------|-------------|
-| N Packets    |      100000 |             |             |            |            |             |
+| N Packets    |     1000000 |             |             |            |            |             |
 | Total Bytes  |       189MB |      4093MB |       189MB |      189MB |     4093MB |       189MB |
 | Name Length  |           3 |           3 |          33 |          3 |          3 |          33 |
 | YaNFD        |  4.90±0.02s | 19.51±0.03s | 15.15±0.08s | 3.17±0.01s | 4.64±0.07s | 13.70±0.06s |
@@ -32,6 +36,47 @@ Summary
 | C++ template |  1.06±0.01s |  9.86±0.08s |  3.83±0.02s | 0.39±0.01s | 0.47±0.01s |  1.33±0.01s |
 | python-ndn   |  118.0±0.6s |  141.5±0.9s |  221.7±0.7s |  37.5±0.3s |  39.7±0.2s |   54.7±0.3s |
 
+
+### Time delta
+
+This table shows the computed incremental time per payload and name component.
+Time in this table is per one packet, so 1s in the last table becomes 1μs.
+
+The two empty cells in the Payload column are because the number is less than SEM and considered as "too small to measure".
+Should be considered as 0.
+
+|              | Enc Base (μs) | Payload (μs/kB) | NameComp (μs/1) | Dec Base (μs) | Payload (μs/kB) | NameComp (μs/1) |
+|--------------|---------------|-----------------|-----------------|---------------|-----------------|-----------------|
+| YaNFD        |    24.89±0.06 |       3.75±0.01 |     2.143±0.007 |     2.95±0.03 |     1.282±0.008 |     0.353±0.002 |
+| Reflect      |     3.32±0.02 |     2.726±0.006 |     0.068±0.002 |     3.07±0.02 |          ±0.004 |     0.057±0.001 |
+| CodeGen      |     0.65±0.02 |     2.759±0.009 |     0.067±0.001 |     0.33±0.02 |     0.021±0.004 |     0.048±0.001 |
+| ndn-cxx      |       4.3±0.2 |       2.23±0.06 |       0.64±0.02 |     0.96±0.02 |          ±0.004 |     0.052±0.001 |
+| C++ template |     0.56±0.02 |       2.25±0.03 |     0.092±0.001 |     0.29±0.02 |     0.021±0.004 |     0.031±0.001 |
+| python-ndn   |     107.0±0.7 |        6.0±0.3s |       3.46±0.03 |      35.7±0.3 |         0.6±0.1 |       0.57±0.02 |
+
+### Lines of Code
+
+This table counts the number of lines of code (LOC).
+In this column, `def` column counts the lines to define specified data structure,
+`alg` column indicates the lines for encoding and decoding functions,
+`etc` column indicates all other LOC, especially property accessors.
+Definitions of TLV type numbers, test cases are excluded.
+For `Data`, lines of code of inner data structures are exlcuded, but the computation of signature value (the piece of code calling SHA256 signer) is included.
+The `Library` column only counts the LOC of necessary data structures and functions for TLV encoding,
+everything related to NDN packet specification is excluded.
+The `Library` column is counted by [cloc](https://github.com/AlDanial/cloc), others by hand.
+
+Also, note that `ndn-cxx`, `python-ndn` and `YaNFD` are published libraries,
+so it is natural for them to have more LOC than others, which are more or less toy code.
+
+|              | Library | MetaInfo (def) | MetaInfo (alg) | MetaInfo (etc) | Data (def) | Data (alg) | Data (etc) |
+|--------------|---------|----------------|----------------|----------------|------------|------------|------------|
+| YaNFD        |    1052 |              6 |             76 |             67 |         10 |        129 |         98 |
+| Reflect      |     422 |              5 |              6 |              0 |          7 |         41 |          0 |
+| CodeGen      |     666 |              8 |             12 |              0 |         12 |         30 |          0 |
+| ndn-cxx      |    1890 |              7 |             59 |            125 |          9 |        128 |        427 |
+| C++ template |     653 |              9 |              6 |              0 |         13 |         32 |          0 |
+| python-ndn   |     909 |              4 |              0 |             12 |         16 |         53 |         11 |
 
 Raw Data - Go
 -------------
@@ -522,4 +567,109 @@ Total time: 223.6294 seconds
 Total time: 37.0010 seconds
 Total time: 39.5002 seconds
 Total time: 53.8632 seconds
+```
+
+Raw Data - cloc
+---------------
+
+### YaNFD
+```text
+-------------------------------------------------------------------------------
+File                             blank        comment           code
+-------------------------------------------------------------------------------
+./name.go                          125            120            688
+./tlv/block.go                      46             58            229
+./tlv/helpers.go                    19             16            127
+./tlv/errors.go                      3              7              8
+-------------------------------------------------------------------------------
+SUM:                               193            201           1052
+-------------------------------------------------------------------------------
+```
+
+### Reflect
+```text
+-------------------------------------------------------------------------------
+File                             blank        comment           code
+-------------------------------------------------------------------------------
+./struct.go                         12              7            119
+./encode.go                          4              5             63
+./name.go                           10              1             63
+./natural.go                         6              1             58
+./tlvvar.go                          5              1             47
+./sequence.go                        5              1             37
+./binary.go                          5              1             24
+./interfaces.go                      3              1             11
+-------------------------------------------------------------------------------
+SUM:                                50             18            422
+-------------------------------------------------------------------------------
+```
+
+### CodeGen
+```text
+-------------------------------------------------------------------------------
+File                             blank        comment           code
+-------------------------------------------------------------------------------
+./fields.go                         27              1            518
+./codegen.go                        12              9            148
+-------------------------------------------------------------------------------
+SUM:                                39             10            666
+-------------------------------------------------------------------------------
+```
+
+### ndn-cxx
+```text
+---------------------------------------------------------------------------------------
+File                                     blank        comment           code
+---------------------------------------------------------------------------------------
+./block.cpp                                 92             34            411
+./tlv.hpp                                   59            143            337
+./encoder.cpp                               36             20            218
+./block.hpp                                 69            257            182
+./encoder.hpp                               52            141            150
+./block-helpers.hpp                         47            131            149
+./block-helpers.cpp                         43             25            131
+./estimator.cpp                             12             20             75
+./buffer.hpp                                23             58             62
+./estimator.hpp                             19             71             60
+./tlv.cpp                                    7             20             56
+./encoding-buffer.hpp                        8             26             34
+./buffer-stream.hpp                         16             41             33
+./buffer-stream.cpp                          9             20             31
+./encoding-buffer-fwd.hpp                   10             20             31
+./buffer.cpp                                 4             20             10
+---------------------------------------------------------------------------------------
+SUM:                                       506           1047           1970
+---------------------------------------------------------------------------------------
+```
+
+However, in `tlv.hpp` there are 80 LOC defining constants for the spec, excluded.
+
+### C++ template
+```text
+-------------------------------------------------------------------------------
+File                             blank        comment           code
+-------------------------------------------------------------------------------
+./tlv-encoder.hpp                   83             79            566
+./slice.hpp                         21              3             87
+-------------------------------------------------------------------------------
+SUM:                               104             82            653
+-------------------------------------------------------------------------------
+```
+
+### python-ndn
+```text
+---------------------------------------------------------------------------------
+File                               blank        comment           code
+---------------------------------------------------------------------------------
+./tlv_model.py                       135            239            530
+./name/Component.py                   63            137            154
+./name/Name.py                        42             81             96
+./tlv_var.py                          23             55             86
+./__init__.py                          3              0             15
+./signer.py                            9             34             14
+./tlv_type.py                         12             27             13
+./name/__init__.py                     0              0              1
+---------------------------------------------------------------------------------
+SUM:                                 287            573            909
+---------------------------------------------------------------------------------
 ```
