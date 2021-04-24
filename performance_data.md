@@ -14,23 +14,23 @@ Environments
 - Method: 5 times, take average.
 - Library Versions
   - ndn-cxx: [dbe645f](https://github.com/named-data/ndn-cxx/commit/dbe645f879e6906945a07935b5da344f8801afd4)
-  - YaNFD: [2b64e2a](https://github.com/eric135/YaNFD/commit/2b64e2aa793d7c9ec25b52fc1eebe247ed97651c)
+  - YaNFD: [b4baed1](https://github.com/zjkmxy/YaNFD/commit/b4baed13e82856b7ab02be7d6625757401e8f2c1)
   - python-ndn: [5244a8e](https://github.com/named-data/python-ndn/commit/5244a8e2d4f0a1e6a0562683960cf3d36f83add9)
 
 Summary
 -------
 
-|              | Enc 1       | Enc 2       | Enc 3      | Dec 1      | Dec 2      | Dec 3       |
-|--------------|-------------|-------------|------------|------------|------------|-------------|
-| N Packets    |      100000 |             |            |            |            |             |
-| Total Bytes  |       189MB |      4093MB |      189MB |      189MB |     4093MB |       189MB |
-| Name Length  |           3 |           3 |         33 |          3 |          3 |          33 |
-| YaNFD        | 31.70±0.05s | 39.67±0.05s |  96.0±0.2s | 4.14±0.02s | 9.14±0.02s | 14.74±0.04s |
-| Reflect      |  3.80±0.01s | 14.43±0.02s | 5.83±0.03s | 3.27±0.01s | 3.24±0.01s |  4.99±0.02s |
-| CodeGen      |  1.13±0.01s | 11.89±0.03s | 3.14±0.02s | 0.48±0.01s | 0.56±0.01s |  1.93±0.02s |
-| ndn-cxx      |    6.4±0.1s |   15.1±0.2s |  25.8±0.3s | 1.12±0.01s | 1.13±0.01s |  2.68±0.02s |
-| C++ template |  1.06±0.01s |  9.86±0.08s | 3.83±0.02s | 0.39±0.01s | 0.47±0.01s |  1.33±0.01s |
-| python-ndn   |  118.0±0.6s |  141.5±0.9s | 221.7±0.7s |  37.5±0.3s |  39.7±0.2s |   54.7±0.3s |
+|              | Enc 1       | Enc 2       | Enc 3       | Dec 1      | Dec 2      | Dec 3       |
+|--------------|-------------|-------------|-------------|------------|------------|-------------|
+| N Packets    |      100000 |             |             |            |            |             |
+| Total Bytes  |       189MB |      4093MB |       189MB |      189MB |     4093MB |       189MB |
+| Name Length  |           3 |           3 |          33 |          3 |          3 |          33 |
+| YaNFD        |  4.90±0.02s | 19.51±0.03s | 15.15±0.08s | 3.17±0.01s | 4.64±0.07s | 13.70±0.06s |
+| Reflect      |  3.80±0.01s | 14.43±0.02s |  5.83±0.03s | 3.27±0.01s | 3.24±0.01s |  4.99±0.02s |
+| CodeGen      |  1.13±0.01s | 11.89±0.03s |  3.14±0.02s | 0.48±0.01s | 0.56±0.01s |  1.93±0.02s |
+| ndn-cxx      |    6.4±0.1s |   15.1±0.2s |   25.8±0.3s | 1.12±0.01s | 1.13±0.01s |  2.68±0.02s |
+| C++ template |  1.06±0.01s |  9.86±0.08s |  3.83±0.02s | 0.39±0.01s | 0.47±0.01s |  1.33±0.01s |
+| python-ndn   |  118.0±0.6s |  141.5±0.9s |  221.7±0.7s |  37.5±0.3s |  39.7±0.2s |   54.7±0.3s |
 
 
 Raw Data - Go
@@ -40,19 +40,19 @@ Raw Data - Go
 ```text
 ========== ENCODEING ==========
 #1: 1000000 x 100B
-block: 		31.71500492s
+block: 		4.854765576s
 reflection: 	3.807049976s
 codegen: 	1.141233216s
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		39.56227125s
+block: 		19.546341029s
 reflection: 	14.431212399s
 codegen: 	11.844070864s
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		1m36.297085353s
+block: 		15.125524913s
 reflection: 	5.890830713s
 codegen: 	3.12920471s
 === Total Bytes: 189000000 ===
@@ -60,19 +60,19 @@ codegen: 	3.12920471s
 
 ========== DECODING ==========
 #1: 1000000 x 100B
-block: 		4.131200174s
+block: 		3.189096366s
 reflection: 	3.291573173s
 codegen: 	460.77955ms
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		9.103082179s
+block: 		4.439581405s
 reflection: 	3.243882034s
 codegen: 	556.047842ms
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		14.810118293s
+block: 		13.653388577s
 reflection: 	4.987587884s
 codegen: 	1.969024137s
 === Total Bytes: 189000000 ===
@@ -82,19 +82,19 @@ codegen: 	1.969024137s
 ```text
 ========== ENCODEING ==========
 #1: 1000000 x 100B
-block: 		31.613325727s
+block: 		4.936672426s
 reflection: 	3.789766454s
 codegen: 	1.12385554s
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		39.730109969s
+block: 		19.529038133s
 reflection: 	14.392564416s
 codegen: 	11.915797907s
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		1m35.585939711s
+block: 		15.321592914s
 reflection: 	5.797209538s
 codegen: 	3.121677155s
 === Total Bytes: 189000000 ===
@@ -102,19 +102,19 @@ codegen: 	3.121677155s
 
 ========== DECODING ==========
 #1: 1000000 x 100B
-block: 		4.075077482s
+block: 		3.149444212s
 reflection: 	3.236745777s
 codegen: 	470.479219ms
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		9.10686344s
+block: 		4.653946675s
 reflection: 	3.251319296s
 codegen: 	562.28719ms
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		14.716916898s
+block: 		13.867353821s
 reflection: 	4.942703808s
 codegen: 	1.908739977s
 === Total Bytes: 189000000 ===
@@ -124,19 +124,19 @@ codegen: 	1.908739977s
 ```text
 ========== ENCODEING ==========
 #1: 1000000 x 100B
-block: 		31.608234057s
+block: 		4.929584319s
 reflection: 	3.786709561s
 codegen: 	1.138760976s
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		39.61192058s
+block: 		19.523884387s
 reflection: 	14.48764612s
 codegen: 	11.866381621s
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		1m35.658166897s
+block: 		15.261806736s
 reflection: 	5.773296797s
 codegen: 	3.127485494s
 === Total Bytes: 189000000 ===
@@ -144,19 +144,19 @@ codegen: 	3.127485494s
 
 ========== DECODING ==========
 #1: 1000000 x 100B
-block: 		4.178730951s
+block: 		3.167998289s
 reflection: 	3.27619214s
 codegen: 	477.900987ms
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		9.153821672s
+block: 		4.639645857s
 reflection: 	3.237357446s
 codegen: 	566.837059ms
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		14.836634512s
+block: 		13.580961856s
 reflection: 	4.982947373s
 codegen: 	1.903607742s
 === Total Bytes: 189000000 ===
@@ -166,19 +166,19 @@ codegen: 	1.903607742s
 ```text
 ========== ENCODEING ==========
 #1: 1000000 x 100B
-block: 		31.856901641s
+block: 		4.882205334s
 reflection: 	3.813996769s
 codegen: 	1.093506218s
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		39.802455292s
+block: 		19.427554844s
 reflection: 	14.403119278s
 codegen: 	11.9841946s
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		1m35.946288872s
+block: 		14.891972644s
 reflection: 	5.832692361s
 codegen: 	3.126838255s
 === Total Bytes: 189000000 ===
@@ -186,19 +186,19 @@ codegen: 	3.126838255s
 
 ========== DECODING ==========
 #1: 1000000 x 100B
-block: 		4.164954039s
+block: 		3.158894297s
 reflection: 	3.277122611s
 codegen: 	481.221132ms
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		9.140709737s
+block: 		4.863815989s
 reflection: 	3.246431148s
 codegen: 	557.789032ms
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		14.725871857s
+block: 		13.775798189s
 reflection: 	5.023395564s
 codegen: 	1.915830726s
 === Total Bytes: 189000000 ===
@@ -208,19 +208,19 @@ codegen: 	1.915830726s
 ```text
 ========== ENCODEING ==========
 #1: 1000000 x 100B
-block: 		31.700602854s
+block: 		4.900603528s
 reflection: 	3.792944088s
 codegen: 	1.14173714s
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		39.661190941s
+block: 		19.501905263s
 reflection: 	14.420068126s
 codegen: 	11.856724463s
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		1m36.400423214s
+block: 		15.162291814s
 reflection: 	5.850854205s
 codegen: 	3.204544324s
 === Total Bytes: 189000000 ===
@@ -228,19 +228,19 @@ codegen: 	3.204544324s
 
 ========== DECODING ==========
 #1: 1000000 x 100B
-block: 		4.162829337s
+block: 		3.171213212s
 reflection: 	3.285752864s
 codegen: 	493.424117ms
 === Total Bytes: 189000000 ===
 
 #2: 1000000 x 4000B
-block: 		9.182287255s
+block: 		4.595272187s
 reflection: 	3.245891018s
 codegen: 	557.266169ms
 === Total Bytes: 4093000000 ===
 
 #3: 1000000 x 10B, very long name
-block: 		14.612674797s
+block: 		13.599677625s
 reflection: 	4.995550971s
 codegen: 	1.968909545s
 === Total Bytes: 189000000 ===
