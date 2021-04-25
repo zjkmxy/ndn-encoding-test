@@ -11,6 +11,7 @@ Environments
   - gcc 10.3.0
   - go 1.16
   - Python 3.6.8
+  - Pypy 3.7
 - Method: 5 times, take average.
 - Library Versions
   - ndn-cxx: [dbe645f](https://github.com/named-data/ndn-cxx/commit/dbe645f879e6906945a07935b5da344f8801afd4)
@@ -35,7 +36,7 @@ Total time for `10^6` packets.
 | ndn-cxx      |    6.4±0.1s |   15.1±0.2s |   25.8±0.3s | 1.12±0.01s | 1.13±0.01s |  2.68±0.02s |
 | C++ template |  1.06±0.01s |  9.86±0.08s |  3.83±0.02s | 0.39±0.01s | 0.47±0.01s |  1.33±0.01s |
 | python-ndn   |  118.0±0.6s |  141.5±0.9s |  221.7±0.7s |  37.5±0.3s |  39.7±0.2s |   54.7±0.3s |
-
+| (pypy3)      |   23.0±0.2s |   44.9±0.4s |   41.2±0.6s | 3.96±0.04s | 4.02±0.04s |  4.61±0.02s |
 
 ### Time delta
 
@@ -53,6 +54,7 @@ Should be considered as 0.
 | ndn-cxx      |       4.3±0.2 |       2.23±0.06 |       0.64±0.02 |     0.96±0.02 |          ±0.004 |     0.052±0.001 |
 | C++ template |     0.56±0.02 |       2.25±0.03 |     0.092±0.001 |     0.29±0.02 |     0.021±0.004 |     0.031±0.001 |
 | python-ndn   |     107.0±0.7 |         6.0±0.3 |       3.46±0.03 |      35.7±0.3 |         0.6±0.1 |       0.57±0.02 |
+| (pypy3)      |      20.6±0.3 |         5.6±0.2 |       0.61±0.03 |     3.89±0.05 |       0.02±0.02 |     0.022±0.001 |
 
 ### Lines of Code
 
@@ -567,6 +569,64 @@ Total time: 223.6294 seconds
 Total time: 37.0010 seconds
 Total time: 39.5002 seconds
 Total time: 53.8632 seconds
+```
+
+Raw Data - python-ndn (pypy3)
+---------------------
+
+### T1
+```text
+./pypy3 encode-01.py && ./pypy3 encode-02.py && ./pypy3 encode-03.py && ./pypy3 decode-01.py && ./pypy3 decode-02.py && ./pypy3 decode-03.py 
+Total time: 23.2973 seconds
+Total time: 44.3198 seconds
+Total time: 39.9096 seconds
+Total time: 3.8774 seconds
+Total time: 4.0191 seconds
+Total time: 4.6539 seconds
+```
+
+### T2
+```text
+./pypy3 encode-01.py && ./pypy3 encode-02.py && ./pypy3 encode-03.py && ./pypy3 decode-01.py && ./pypy3 decode-02.py && ./pypy3 decode-03.py 
+Total time: 22.8894 seconds
+Total time: 44.0513 seconds
+Total time: 40.6131 seconds
+Total time: 3.9117 seconds
+Total time: 4.1674 seconds
+Total time: 4.6047 seconds
+```
+
+### T3
+```text
+./pypy3 encode-01.py && ./pypy3 encode-02.py && ./pypy3 encode-03.py && ./pypy3 decode-01.py && ./pypy3 decode-02.py && ./pypy3 decode-03.py 
+Total time: 22.7557 seconds
+Total time: 46.2450 seconds
+Total time: 42.4678 seconds
+Total time: 3.9472 seconds
+Total time: 3.9590 seconds
+Total time: 4.5828 seconds
+```
+
+### T4
+```text
+./pypy3 encode-01.py && ./pypy3 encode-02.py && ./pypy3 encode-03.py && ./pypy3 decode-01.py && ./pypy3 decode-02.py && ./pypy3 decode-03.py 
+Total time: 23.5257 seconds
+Total time: 44.8939 seconds
+Total time: 40.7754 seconds
+Total time: 3.9525 seconds
+Total time: 3.9701 seconds
+Total time: 4.5507 seconds
+```
+
+### T5
+```text
+./pypy3 encode-01.py && ./pypy3 encode-02.py && ./pypy3 encode-03.py && ./pypy3 decode-01.py && ./pypy3 decode-02.py && ./pypy3 decode-03.py 
+Total time: 22.4416 seconds
+Total time: 45.0505 seconds
+Total time: 42.3590 seconds
+Total time: 4.0875 seconds
+Total time: 3.9862 seconds
+Total time: 4.6395 seconds
 ```
 
 Raw Data - cloc
