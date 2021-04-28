@@ -4,15 +4,15 @@ using namespace ndn;
 
 void encode(std::string name){
   Data data{
-    NameFromString(name),
-    MetaInfo {
-      0,
-      4000,
-      GenericNameComponent(std::string("10000"))
+    .name = NameFromString(name),
+    .metaInfo = MetaInfo {
+      .contentType = 0,
+      .freshnessPeriod = 4000,
+      .finalBlockId = GenericNameComponent(std::string("10000"))
     },
-    Buffer(4000),
-    SignatureInfo{
-      0
+    .content = Buffer(4000),
+    .signatureInfo = SignatureInfo{
+      .signatureType = 0
     }
   };
   auto ptr = data.Encode();
