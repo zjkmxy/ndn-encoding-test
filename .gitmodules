@@ -1,7 +1,3 @@
-[submodule "YaNFD"]
-	path = YaNFD
-	url = https://github.com/zjkmxy/YaNFD.git
-	branch = no-copying
 [submodule "memory_monitor"]
 	path = memory_monitor
 	url = https://github.com/zjkmxy/memory_monitor

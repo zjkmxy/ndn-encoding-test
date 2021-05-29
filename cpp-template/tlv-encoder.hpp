@@ -605,6 +605,7 @@ struct Struct {
   template<typename Field, typename Field2, typename ...MoreFields>
   static inline std::optional<size_t>
   ParseField(const Buffer& wire, Model& model) {
+    // TODO: Handle unrecognized fields
     auto pos = Field::ParseField(wire, model);
     if(!pos.has_value()){
       return std::nullopt;
