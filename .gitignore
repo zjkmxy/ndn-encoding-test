@@ -123,3 +123,5 @@ checkpoint
 # Special
 *.wasm
 ndn-encoding-test
+/main
+*.prof

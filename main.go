@@ -1,12 +1,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"os"
+	"runtime/pprof"
 	"time"
 
 	"github.com/named-data/YaNFD/ndn"
 	"github.com/named-data/YaNFD/ndn/security"
 	"github.com/named-data/YaNFD/ndn/tlv"
+	enc "github.com/zjkmxy/go-ndn/pkg/encoding"
+	gondn "github.com/zjkmxy/go-ndn/pkg/ndn"
+	"github.com/zjkmxy/go-ndn/pkg/ndn/spec_2022"
+	gondnsec "github.com/zjkmxy/go-ndn/pkg/security"
+	"github.com/zjkmxy/go-ndn/pkg/utils"
 	"github.com/zjkmxy/ndn-encoding-test/benchmark"
 	"github.com/zjkmxy/ndn-encoding-test/codegen"
 	"github.com/zjkmxy/ndn-encoding-test/refl"
@@ -17,8 +26,23 @@ const (
 	testDecoding = true
 )
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+
 func main() {
 	var cases []benchmark.Case
+
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
 
 	if testEncoding {
 		fmt.Printf("========== ENCODING ==========\n")
@@ -58,6 +82,8 @@ func run(cases []benchmark.Case) {
 	fmt.Printf("reflection: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, codegenEncode)
 	fmt.Printf("codegen: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, gondnEncode)
+	fmt.Printf("go-ndn: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
 }
@@ -69,6 +95,8 @@ func runDecoding(cases []benchmark.Case) {
 	fmt.Printf("reflection: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, codegenDecode)
 	fmt.Printf("codegen: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, gondnDecode)
+	fmt.Printf("go-ndn: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
 }
@@ -133,6 +161,25 @@ func codegenEncode(c benchmark.Case) int {
 	return len(wire)
 }
 
+func gondnEncode(c benchmark.Case) int {
+	spec := spec_2022.Spec{}
+	name, _ := enc.NameFromStr(c.Name)
+	wire, _, _ := spec.MakeData(
+		name,
+		&gondn.DataConfig{
+			ContentType: utils.IdPtr(gondn.ContentTypeBlob),
+			Freshness:   utils.IdPtr(4 * time.Second),
+			FinalBlockID: &enc.Component{
+				Typ: 8,
+				Val: []byte("10000"),
+			},
+		},
+		enc.Wire{c.Payload},
+		gondnsec.NewSha256Signer(),
+	)
+	return len(wire)
+}
+
 func blockDecode(c benchmark.Case) int {
 	wire, size, err := tlv.DecodeBlock(c.Payload)
 	if err != nil {
@@ -155,6 +202,15 @@ func codegenDecode(c benchmark.Case) int {
 
 func reflDecode(c benchmark.Case) int {
 	data := refl.DecodeData(c.Payload)
+	if data == nil {
+		panic("Unable to parse data")
+	}
+	return len(c.Payload)
+}
+
+func gondnDecode(c benchmark.Case) int {
+	spec := spec_2022.Spec{}
+	data, _, _ := spec.ReadData(enc.NewBufferReader(c.Payload))
 	if data == nil {
 		panic("Unable to parse data")
 	}
