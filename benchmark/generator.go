@@ -11,9 +11,10 @@ import (
 type Case struct {
 	Name    string
 	Payload []byte
+	IfSign  bool
 }
 
-func GenerateEncodingCases(cnt, payload, extraNameComponent int) (ret []Case) {
+func GenerateEncodingCases(cnt int, payload int, extraNameComponent int, ifSign bool) (ret []Case) {
 	extraName := ""
 	for j := 0; j < extraNameComponent; j++ {
 		extraName += "a/"
@@ -21,8 +22,11 @@ func GenerateEncodingCases(cnt, payload, extraNameComponent int) (ret []Case) {
 
 	ret = make([]Case, cnt)
 	for i := 0; i < cnt; i++ {
-		ret[i].Name = fmt.Sprintf("/go-ndn/test/%s%010d", extraName, i+1)
-		ret[i].Payload = make([]byte, payload)
+		ret[i] = Case{
+			Name:    fmt.Sprintf("/go-ndn/test/%s%010d", extraName, i+1),
+			Payload: make([]byte, payload),
+			IfSign:  ifSign,
+		}
 		rand.Read(ret[i].Payload)
 	}
 	return

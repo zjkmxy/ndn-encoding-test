@@ -386,8 +386,10 @@ func (e *DataEncoder) init(v *Data) {
 	}
 	l += e.SignatureInfo_encoder.length
 
-	l += 1
-	l += 33
+	if v.SignatureValue != nil {
+		l += 1
+		l += 33
+	}
 
 	e.length = l
 }
@@ -482,10 +484,12 @@ func (e *DataEncoder) encodeInto(v *Data, buf []byte) uint {
 	}
 	pos += e.SignatureInfo_encoder.encodeInto(v.SignatureInfo, buf[pos:])
 
-	buf[pos] = 23
-	pos += 1
-	buf[pos] = 32
-	pos += 33
+	if v.SignatureValue != nil {
+		buf[pos] = 23
+		pos += 1
+		buf[pos] = 32
+		pos += 33
+	}
 
 	return pos
 }

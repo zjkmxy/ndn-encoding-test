@@ -46,14 +46,14 @@ struct Data {
   // Should be replaced with a memory view to avoid copying on decoding
   std::optional<Buffer> content;
   SignatureInfo signatureInfo;
-  mutable Buffer signatureValue;
+  mutable std::optional<Buffer> signatureValue;
   
   using Encodable = Struct<Data,
     NameField<0x07, Data, &Data::name>,
     StructFieldOpt<0x14, Data, struct MetaInfo, &Data::metaInfo>,
     BytesFieldOpt<0x15, Data, Buffer, &Data::content>,
     StructField<0x16, Data, decltype(signatureInfo), &Data::signatureInfo>,
-    Field<Data, TlvBlock<0x17, Buffer, SignatureValueEncodable<Buffer>>, &Data::signatureValue>>;
+    Field<Data, OptionalBlock<0x17, Buffer, SignatureValueEncodable<Buffer>>, &Data::signatureValue>>;
     
   Buffer Encode() const {
     Encodable data(*this);
@@ -67,10 +67,12 @@ struct Data {
     pos += length.EncodeInto(ret.data() + pos, size - pos);
     data.EncodeInto(ret.data() + pos, size - pos);
 
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, ret.data() + pos, size - pos - 32);
-    SHA256_Final(ret.data() + size - 32, &ctx);
+    if(signatureValue != std::nullopt){
+      SHA256_CTX ctx;
+      SHA256_Init(&ctx);
+      SHA256_Update(&ctx, ret.data() + pos, size - pos - 34);
+      SHA256_Final(ret.data() + size - 32, &ctx);
+    }
 
     return ret;
   }

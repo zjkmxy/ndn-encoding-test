@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	testEncoding = true
-	testDecoding = true
+	testEncoding   = true
+	testDecoding   = true
+	signOnEncoding = false
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
@@ -47,15 +48,15 @@ func main() {
 	if testEncoding {
 		fmt.Printf("========== ENCODING ==========\n")
 		fmt.Printf("#1: 1000000 x 100B\n")
-		cases = benchmark.GenerateEncodingCases(1000000, 100, 0)
+		cases = benchmark.GenerateEncodingCases(1000000, 100, 0, signOnEncoding)
 		run(cases)
 
 		fmt.Printf("#2: 1000000 x 4000B\n")
-		cases = benchmark.GenerateEncodingCases(1000000, 4000, 0)
+		cases = benchmark.GenerateEncodingCases(1000000, 4000, 0, signOnEncoding)
 		run(cases)
 
 		fmt.Printf("#3: 1000000 x 10B, very long name\n")
-		cases = benchmark.GenerateEncodingCases(1000000, 10, 30)
+		cases = benchmark.GenerateEncodingCases(1000000, 10, 30, signOnEncoding)
 		run(cases)
 	}
 
@@ -112,7 +113,11 @@ func blockEncode(c benchmark.Case) int {
 	metaInfo.SetFreshnessPeriod(4 * time.Second)
 	metaInfo.SetContentType(0)
 	data.SetMetaInfo(metaInfo)
-	data.SetSignatureInfo(ndn.NewSignatureInfo(security.DigestSha256Type))
+	if c.IfSign {
+		data.SetSignatureInfo(ndn.NewSignatureInfo(security.DigestSha256Type))
+	} else {
+		data.SetSignatureInfo(ndn.NewSignatureInfo(security.SignatureNullType))
+	}
 	block, err := data.Encode()
 	if err != nil {
 		panic(err)
@@ -138,7 +143,7 @@ func reflEncode(c benchmark.Case) int {
 			SignatureType: 0,
 		},
 	}
-	wire := data.Encode()
+	wire := data.Encode(c.IfSign)
 	// fmt.Printf("%+v\n", wire)
 	return len(wire)
 }
@@ -156,6 +161,11 @@ func codegenEncode(c benchmark.Case) int {
 			SignatureType: 0,
 		},
 	}
+	if c.IfSign {
+		data.SignatureValue = []byte{}
+	} else {
+		data.SignatureInfo.SignatureType = 200
+	}
 	wire := data.Encode()
 	// fmt.Printf("%+v\n", wire)
 	return len(wire)
@@ -164,6 +174,10 @@ func codegenEncode(c benchmark.Case) int {
 func gondnEncode(c benchmark.Case) int {
 	spec := spec_2022.Spec{}
 	name, _ := enc.NameFromStr(c.Name)
+	signer := gondn.Signer(nil)
+	if c.IfSign {
+		signer = gondnsec.NewSha256Signer()
+	}
 	wire, _, _ := spec.MakeData(
 		name,
 		&gondn.DataConfig{
@@ -175,7 +189,7 @@ func gondnEncode(c benchmark.Case) int {
 			},
 		},
 		enc.Wire{c.Payload},
-		gondnsec.NewSha256Signer(),
+		signer,
 	)
 	return len(wire)
 }

@@ -284,15 +284,19 @@ func NewSignatureField(name string, typeNum uint64) *Field {
 		TypeNum: typeNum,
 		EncodingLength: func(f *Field) (string, error) {
 			var g strErrBuf
+			g.printlnf("if v.%s != nil {", f.Name)
 			g.printlne(GenTypeNumLen(f.TypeNum))
 			g.printlnf("l += 33")
+			g.printlnf("}")
 			return g.output()
 		},
 		EncodeInto: func(f *Field) (string, error) {
 			var g strErrBuf
+			g.printlnf("if v.%s != nil {", f.Name)
 			g.printlne(GenEncodeTypeNum(f.TypeNum))
 			g.printlnf("buf[pos] = 32")
 			g.printlnf("pos += 33")
+			g.printlnf("}")
 			return g.output()
 		},
 		DecodeFrom: func(f *Field) (string, error) {

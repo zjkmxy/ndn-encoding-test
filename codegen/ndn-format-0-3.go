@@ -43,10 +43,12 @@ func (v *Data) Encode() []byte {
 	pos := refl.TLVVar(0x06).Encode(ret)
 	pos += tlvLen.Encode(ret[pos:])
 
-	sha := sha256.New()
-	end := pos + e.encodeInto(v, ret[pos:]) - uint(sha.Size()) - 2
-	sha.Write(ret[pos:end])
-	sha.Sum(ret[0 : end+2])
+	if v.SignatureValue != nil {
+		sha := sha256.New()
+		end := pos + e.encodeInto(v, ret[pos:]) - uint(sha.Size()) - 2
+		sha.Write(ret[pos:end])
+		sha.Sum(ret[0 : end+2])
+	}
 	return ret
 }
 

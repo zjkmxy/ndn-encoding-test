@@ -13,7 +13,8 @@ void encode(std::string name){
     .content = Buffer(100),
     .signatureInfo = SignatureInfo{
       .signatureType = 0
-    }
+    },
+    .signatureValue = std::nullopt
   };
   auto ptr = data.Encode();
 }

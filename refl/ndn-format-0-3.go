@@ -2,6 +2,7 @@ package refl
 
 import (
 	"crypto/sha256"
+	"hash"
 	"reflect"
 	"time"
 )
@@ -24,11 +25,17 @@ type Data struct {
 	SignatureValue []byte         `tlv:"0x17"`
 }
 
-func (v *Data) Encode() []byte {
+func (v *Data) Encode(ifSign bool) []byte {
 	// Just quick and dirty hack
-	v.SignatureInfo.SignatureType = 0
-	sha := sha256.New()
-	v.SignatureValue = make([]byte, sha.Size())
+	var sha hash.Hash
+	if ifSign {
+		v.SignatureInfo.SignatureType = 0
+		sha = sha256.New()
+		v.SignatureValue = make([]byte, sha.Size())
+	} else {
+		v.SignatureInfo.SignatureType = 200
+		v.SignatureValue = nil
+	}
 	stru := NewStruct(TLVVar(0x06), reflect.ValueOf(v).Elem())
 	l := stru.Length()
 	ret := make([]byte, l)
@@ -44,9 +51,11 @@ func (v *Data) Encode() []byte {
 	default:
 		pos += 1
 	}
-	end := int(l) - sha.Size() - 2
-	sha.Write(ret[pos:end])
-	sha.Sum(ret[0 : end+2])
+	if ifSign {
+		end := int(l) - sha.Size() - 2
+		sha.Write(ret[pos:end])
+		sha.Sum(ret[0 : end+2])
+	}
 	return ret
 }
 
