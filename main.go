@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"github.com/named-data/YaNFD/ndn"
@@ -18,7 +19,9 @@ import (
 	"github.com/zjkmxy/go-ndn/pkg/utils"
 	"github.com/zjkmxy/ndn-encoding-test/benchmark"
 	"github.com/zjkmxy/ndn-encoding-test/codegen"
+	ndnpb "github.com/zjkmxy/ndn-encoding-test/protobuf"
 	"github.com/zjkmxy/ndn-encoding-test/refl"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -85,6 +88,8 @@ func run(cases []benchmark.Case) {
 	fmt.Printf("codegen: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, gondnEncode)
 	fmt.Printf("go-ndn: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, ndnpbEncode)
+	fmt.Printf("protobuf: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
 }
@@ -194,6 +199,40 @@ func gondnEncode(c benchmark.Case) int {
 	return len(wire)
 }
 
+func ndnpbEncode(c benchmark.Case) int {
+	pbNameFromStr := func(s string) *ndnpb.Name {
+		compStrs := strings.Split(s, "/")
+		ret := &ndnpb.Name{
+			Component: make([][]byte, len(compStrs)-1),
+		}
+		for i, cs := range compStrs {
+			if i == 0 {
+				continue
+			}
+			ret.Component[i-1] = []byte(cs)
+		}
+		return ret
+	}
+
+	data := &ndnpb.Data{
+		Name: pbNameFromStr(c.Name),
+		MetaInfo: &ndnpb.MetaInfo{
+			ContentType:     0,
+			FreshnessPeriod: 4000,
+			FinalBlockId:    &ndnpb.FinalBlockId{Component: []byte("10000")},
+		},
+		Content: c.Payload,
+		SignatureInfo: &ndnpb.SignatureInfo{
+			SignatureType: 0,
+		},
+	}
+	out, err := proto.Marshal(data)
+	if err != nil {
+		log.Fatalln("Failed to encode data:", err)
+	}
+	return len(out)
+}
+
 func blockDecode(c benchmark.Case) int {
 	wire, size, err := tlv.DecodeBlock(c.Payload)
 	if err != nil {
@@ -229,4 +268,9 @@ func gondnDecode(c benchmark.Case) int {
 		panic("Unable to parse data")
 	}
 	return len(c.Payload)
+}
+
+func ndnpbDecode(c benchmark.Case) int {
+	// data := &ndnpb.Data{}
+	return 0
 }

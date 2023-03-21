@@ -1,0 +1,55 @@
+syntax = "proto3";
+package ndnproto;
+
+option go_package = "github.com/zjkmxy/ndn-encoding-test/protobuf";
+
+message Name {
+  repeated bytes component = 8;
+}
+
+message FinalBlockId {
+  bytes component = 8;
+}
+
+message ForwardingHint {
+  repeated Name name = 7;
+}
+
+message KeyLocator {
+  Name name = 7;
+}
+
+message SignatureInfo {
+  uint64 signatureType = 27;
+  KeyLocator keyLocator = 28;
+  bytes signatureNonce = 38;
+  uint64 signatureTime = 40;
+  uint64 signatureSeqNum = 42;
+}
+
+message Interest {
+  Name name = 7;
+  bool canBePrefix = 33;
+  bool mustBeFresh = 18;
+  ForwardingHint forwardingHint = 30;
+  fixed32 nonce = 10;
+  uint64 lifetime = 12;
+  uint32 hopLimit = 34;
+  bytes appParam = 36;
+  SignatureInfo signatureInfo = 44;
+  bytes signatureValue = 46;
+}
+
+message MetaInfo {
+  uint64 contentType = 24;
+  uint64 freshnessPeriod = 25;
+  FinalBlockId finalBlockId = 26;
+}
+
+message Data {
+  Name name = 7;
+  MetaInfo metaInfo = 20;
+  bytes content = 21;
+  SignatureInfo signatureInfo = 22;
+  bytes signatureValue = 23;
+}
