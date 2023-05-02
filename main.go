@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -89,7 +90,11 @@ func run(cases []benchmark.Case) {
 	tim, _ = benchmark.Execute(cases, gondnEncode)
 	fmt.Printf("go-ndn: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, ndnpbEncode)
+
 	fmt.Printf("protobuf: \t%v\n", tim)
+	tim, _ = benchmark.Execute(cases, jsonEncode)
+	fmt.Printf("json: \t%v\n", tim)
+
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
 }
@@ -227,6 +232,40 @@ func ndnpbEncode(c benchmark.Case) int {
 		},
 	}
 	out, err := proto.Marshal(data)
+	if err != nil {
+		log.Fatalln("Failed to encode data:", err)
+	}
+	return len(out)
+}
+
+func jsonEncode(c benchmark.Case) int {
+	pbNameFromStr := func(s string) *ndnpb.Name {
+		compStrs := strings.Split(s, "/")
+		ret := &ndnpb.Name{
+			Component: make([][]byte, len(compStrs)-1),
+		}
+		for i, cs := range compStrs {
+			if i == 0 {
+				continue
+			}
+			ret.Component[i-1] = []byte(cs)
+		}
+		return ret
+	}
+
+	data := &ndnpb.Data{
+		Name: pbNameFromStr(c.Name),
+		MetaInfo: &ndnpb.MetaInfo{
+			ContentType:     0,
+			FreshnessPeriod: 4000,
+			FinalBlockId:    &ndnpb.FinalBlockId{Component: []byte("10000")},
+		},
+		Content: c.Payload,
+		SignatureInfo: &ndnpb.SignatureInfo{
+			SignatureType: 0,
+		},
+	}
+	out, err := json.Marshal(data)
 	if err != nil {
 		log.Fatalln("Failed to encode data:", err)
 	}
