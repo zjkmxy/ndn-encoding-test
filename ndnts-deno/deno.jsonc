@@ -1,0 +1,15 @@
+{
+  // BYNOM does not work with import-map
+  // "imports": {
+  //   "std/": "https://deno.land/std@0.207.0/"
+  // },
+  "tasks": {
+    "encode-01": "deno run --unstable encode-01.ts",
+    "encode-02": "deno run --unstable encode-02.ts",
+    "encode-03": "deno run --unstable encode-03.ts",
+    "decode-01": "deno run --unstable decode-01.ts",
+    "decode-02": "deno run --unstable decode-02.ts",
+    "decode-03": "deno run --unstable decode-03.ts"
+  },
+  "unstable": ["byonm"]
+}

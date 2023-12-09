@@ -1,0 +1,18 @@
+{
+  "name": "ndnts-deno",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ndn/endpoint": "https://ndnts-nightly.ndn.today/endpoint.tgz",
+    "@ndn/naming-convention2": "https://ndnts-nightly.ndn.today/naming-convention2.tgz",
+    "@ndn/packet": "https://ndnts-nightly.ndn.today/packet.tgz",
+    "@ndn/tlv": "https://ndnts-nightly.ndn.today/tlv.tgz"
+  }
+}

@@ -125,3 +125,6 @@ checkpoint
 ndn-encoding-test
 /main
 *.prof
+
+node_modules
+temp/

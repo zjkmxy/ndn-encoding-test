@@ -1,0 +1,167 @@
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  '@ndn/endpoint':
+    specifier: https://ndnts-nightly.ndn.today/endpoint.tgz
+    version: '@ndnts-nightly.ndn.today/endpoint.tgz'
+  '@ndn/naming-convention2':
+    specifier: https://ndnts-nightly.ndn.today/naming-convention2.tgz
+    version: '@ndnts-nightly.ndn.today/naming-convention2.tgz'
+  '@ndn/packet':
+    specifier: https://ndnts-nightly.ndn.today/packet.tgz
+    version: '@ndnts-nightly.ndn.today/packet.tgz'
+  '@ndn/tlv':
+    specifier: https://ndnts-nightly.ndn.today/tlv.tgz
+    version: '@ndnts-nightly.ndn.today/tlv.tgz'
+
+packages:
+
+  /@types/minimalistic-assert@1.0.3:
+    resolution: {integrity: sha512-Ku87cam4YxiXcEpeUemo+vO8QWGQ7U2CwEEcLcYFhxG8b4CK8gWxSX/oWjePWKwqPaWWxxVqXAdAjGdlJtVzDA==}
+    dev: false
+
+  /@types/retry@0.12.5:
+    resolution: {integrity: sha512-3xSjTp3v03X/lSQLkczaN9UIEwJMoMCA1+Nb5HfbJEQWogdeQIyVtTvxPXDQjZ5zws8rFQfVfRdz03ARihPJgw==}
+    dev: false
+
+  /applymixins@1.1.0:
+    resolution: {integrity: sha512-mLvdWWGyCbRJyLC0BJCRu1m/642aVVq3kIwD1MWwmdedkVGwXVrx5D85EhkAtb4NgkCfVTDwacIhTDeX3gu55w==}
+    dev: false
+
+  /buffer-compare@1.1.1:
+    resolution: {integrity: sha512-O6NvNiHZMd3mlIeMDjP6t/gPG75OqGPeiRZXoMQZJ6iy9GofCls4Ijs5YkPZZwoysizLiedhticmdyx/GyHghA==}
+    dev: false
+
+  /hirestime@7.0.3:
+    resolution: {integrity: sha512-XmjAwwjLJlDjVVljWht/+Pb6vTfs6A0z2ZpaCkVmzEkwiZcO/+lbj1DsxpsDvkVprYHCmNBxTr7tUohdlxG2Hw==}
+    engines: {node: '>=6.0'}
+    dev: false
+
+  /it-pushable@3.2.3:
+    resolution: {integrity: sha512-gzYnXYK8Y5t5b/BnJUr7glfQLO4U5vyb05gPx/TyTw+4Bv1zM9gFk4YsOrnulWefMewlphCjKkakFvj1y99Tcg==}
+    dependencies:
+      p-defer: 4.0.0
+    dev: false
+
+  /minimalistic-assert@1.0.1:
+    resolution: {integrity: sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==}
+    dev: false
+
+  /mnemonist@0.39.6:
+    resolution: {integrity: sha512-A/0v5Z59y63US00cRSLiloEIw3t5G+MiKz4BhX21FI+YBJXBOGW0ohFxTxO08dsOYlzxo87T7vGfZKYp2bcAWA==}
+    dependencies:
+      obliterator: 2.0.4
+    dev: false
+
+  /obliterator@2.0.4:
+    resolution: {integrity: sha512-lgHwxlxV1qIg1Eap7LgIeoBWIMFibOjbrYPIPJZcI1mmGAI2m3lNYpK12Y+GBdPQ0U1hRwSord7GIaawz962qQ==}
+    dev: false
+
+  /p-defer@4.0.0:
+    resolution: {integrity: sha512-Vb3QRvQ0Y5XnF40ZUWW7JfLogicVh/EnA5gBIvKDJoYpeI82+1E3AlB9yOcKFS0AhHrWVnAQO39fbR0G99IVEQ==}
+    engines: {node: '>=12'}
+    dev: false
+
+  /retry@0.13.1:
+    resolution: {integrity: sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg==}
+    engines: {node: '>= 4'}
+    dev: false
+
+  /streaming-iterables@8.0.1:
+    resolution: {integrity: sha512-yfQdmUB1b+rGLZkD/r6YisT/eNOjZxBAckXKlzYNmRJnwSzHaiScykD8gsQceFcShtK09qAbLhOqvzIpnBPoDQ==}
+    engines: {node: '>=18'}
+    dev: false
+
+  /tslib@2.6.2:
+    resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
+    dev: false
+
+  /type-fest@4.8.3:
+    resolution: {integrity: sha512-//BaTm14Q/gHBn09xlnKNqfI8t6bmdzx2DXYfPBNofN0WUybCEUDcbCWcTa0oF09lzLjZgPphXAsvRiMK0V6Bw==}
+    engines: {node: '>=16'}
+    dev: false
+
+  /typescript-event-target@1.1.0:
+    resolution: {integrity: sha512-PMrzUVryhnUq2n8M7tjNHNRuIHlUqly5RfGltBTpPCdVpbytgALTRDegF/t6+mFmmtBVhOqEYlbjVNBxwabIug==}
+    dev: false
+
+  '@ndnts-nightly.ndn.today/endpoint.tgz':
+    resolution: {tarball: https://ndnts-nightly.ndn.today/endpoint.tgz}
+    name: '@ndn/endpoint'
+    version: 0.0.20231126-nightly-2870797
+    dependencies:
+      '@ndn/fw': '@ndnts-nightly.ndn.today/fw.tgz'
+      '@ndn/packet': '@ndnts-nightly.ndn.today/packet.tgz'
+      '@ndn/util': '@ndnts-nightly.ndn.today/util.tgz'
+      applymixins: 1.1.0
+      it-pushable: 3.2.3
+      streaming-iterables: 8.0.1
+      tslib: 2.6.2
+    dev: false
+
+  '@ndnts-nightly.ndn.today/fw.tgz':
+    resolution: {tarball: https://ndnts-nightly.ndn.today/fw.tgz}
+    name: '@ndn/fw'
+    version: 0.0.20231126-nightly-2870797
+    dependencies:
+      '@ndn/packet': '@ndnts-nightly.ndn.today/packet.tgz'
+      '@ndn/util': '@ndnts-nightly.ndn.today/util.tgz'
+      '@types/retry': 0.12.5
+      hirestime: 7.0.3
+      it-pushable: 3.2.3
+      mnemonist: 0.39.6
+      retry: 0.13.1
+      streaming-iterables: 8.0.1
+      tslib: 2.6.2
+      typescript-event-target: 1.1.0
+    dev: false
+
+  '@ndnts-nightly.ndn.today/naming-convention2.tgz':
+    resolution: {tarball: https://ndnts-nightly.ndn.today/naming-convention2.tgz}
+    name: '@ndn/naming-convention2'
+    version: 0.0.20231126-nightly-2870797
+    dependencies:
+      '@ndn/packet': '@ndnts-nightly.ndn.today/packet.tgz'
+      '@ndn/tlv': '@ndnts-nightly.ndn.today/tlv.tgz'
+      '@ndn/util': '@ndnts-nightly.ndn.today/util.tgz'
+      tslib: 2.6.2
+    dev: false
+
+  '@ndnts-nightly.ndn.today/packet.tgz':
+    resolution: {tarball: https://ndnts-nightly.ndn.today/packet.tgz}
+    name: '@ndn/packet'
+    version: 0.0.20231126-nightly-2870797
+    dependencies:
+      '@ndn/tlv': '@ndnts-nightly.ndn.today/tlv.tgz'
+      '@ndn/util': '@ndnts-nightly.ndn.today/util.tgz'
+      buffer-compare: 1.1.1
+      mnemonist: 0.39.6
+      tslib: 2.6.2
+      type-fest: 4.8.3
+    dev: false
+
+  '@ndnts-nightly.ndn.today/tlv.tgz':
+    resolution: {tarball: https://ndnts-nightly.ndn.today/tlv.tgz}
+    name: '@ndn/tlv'
+    version: 0.0.20231126-nightly-2870797
+    dependencies:
+      '@ndn/util': '@ndnts-nightly.ndn.today/util.tgz'
+      mnemonist: 0.39.6
+      tslib: 2.6.2
+    dev: false
+
+  '@ndnts-nightly.ndn.today/util.tgz':
+    resolution: {tarball: https://ndnts-nightly.ndn.today/util.tgz}
+    name: '@ndn/util'
+    version: 0.0.20231126-nightly-2870797
+    engines: {node: ^18.13.0 || ^20.0.0 || ^21.0.0}
+    dependencies:
+      '@types/minimalistic-assert': 1.0.3
+      minimalistic-assert: 1.0.1
+      streaming-iterables: 8.0.1
+      tslib: 2.6.2
+    dev: false
