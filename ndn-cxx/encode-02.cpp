@@ -18,11 +18,11 @@ void encode(string name){
   data.setFreshnessPeriod(4000_ms);
   data.setContentType(0);
   data.setFinalBlock(name::Component("10000"));
-  data.setContent(buf, 4000);
+  data.setContent(buf);
   // keyChain.sign(data, signingWithSha256());
   data.setSignatureInfo(SignatureInfo(tlv::NullSignature));
   data.setSignatureValue(std::make_shared<Buffer>());
-  ptr = data.wireEncode().wire();
+  ptr = data.wireEncode().data();
 }
 
 int main(int argc, char* argv[]){

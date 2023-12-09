@@ -1,7 +1,7 @@
 import { Name, Data } from "@ndn/packet"
 import { Encoder } from "@ndn/tlv"
 
-const oneRun = async (i: number) => {
+const oneRun = (i: number) => {
   const nameStr = "/go-ndn/test/" + i.toLocaleString('en-US', { minimumIntegerDigits: 10, useGrouping: false })
   const content = new Uint8Array(100)
   const data = new Data(

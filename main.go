@@ -10,9 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/named-data/YaNFD/ndn"
-	"github.com/named-data/YaNFD/ndn/security"
-	"github.com/named-data/YaNFD/ndn/tlv"
 	enc "github.com/zjkmxy/go-ndn/pkg/encoding"
 	gondn "github.com/zjkmxy/go-ndn/pkg/ndn"
 	"github.com/zjkmxy/go-ndn/pkg/ndn/spec_2022"
@@ -81,9 +78,7 @@ func main() {
 }
 
 func run(cases []benchmark.Case) {
-	tim, totalBytes := benchmark.Execute(cases, blockEncode)
-	fmt.Printf("block: \t\t%v\n", tim)
-	tim, _ = benchmark.Execute(cases, reflEncode)
+	tim, totalBytes := benchmark.Execute(cases, reflEncode)
 	fmt.Printf("reflection: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, codegenEncode)
 	fmt.Printf("codegen: \t%v\n", tim)
@@ -100,9 +95,7 @@ func run(cases []benchmark.Case) {
 }
 
 func runDecoding(cases []benchmark.Case) {
-	tim, totalBytes := benchmark.Execute(cases, blockDecode)
-	fmt.Printf("block: \t\t%v\n", tim)
-	tim, _ = benchmark.Execute(cases, reflDecode)
+	tim, totalBytes := benchmark.Execute(cases, reflDecode)
 	fmt.Printf("reflection: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, codegenDecode)
 	fmt.Printf("codegen: \t%v\n", tim)
@@ -110,34 +103,6 @@ func runDecoding(cases []benchmark.Case) {
 	fmt.Printf("go-ndn: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
-}
-
-func blockEncode(c benchmark.Case) int {
-	name, err := ndn.NameFromString(c.Name)
-	if err != nil {
-		panic(err)
-	}
-	data := ndn.NewData(name, c.Payload)
-	metaInfo := ndn.NewMetaInfo()
-	metaInfo.SetFinalBlockID(ndn.NewGenericNameComponent([]byte("10000")))
-	metaInfo.SetFreshnessPeriod(4 * time.Second)
-	metaInfo.SetContentType(0)
-	data.SetMetaInfo(metaInfo)
-	if c.IfSign {
-		data.SetSignatureInfo(ndn.NewSignatureInfo(security.DigestSha256Type))
-	} else {
-		data.SetSignatureInfo(ndn.NewSignatureInfo(security.SignatureNullType))
-	}
-	block, err := data.Encode()
-	if err != nil {
-		panic(err)
-	}
-	wire, err := block.Wire()
-	if err != nil {
-		panic(err)
-	}
-	// fmt.Printf("%+v\n", wire)
-	return len(wire)
 }
 
 func reflEncode(c benchmark.Case) int {
@@ -272,18 +237,6 @@ func jsonEncode(c benchmark.Case) int {
 	return len(out)
 }
 
-func blockDecode(c benchmark.Case) int {
-	wire, size, err := tlv.DecodeBlock(c.Payload)
-	if err != nil {
-		panic(err)
-	}
-	data, err := ndn.DecodeData(wire, false)
-	if data == nil || err != nil {
-		panic(err)
-	}
-	return int(size)
-}
-
 func codegenDecode(c benchmark.Case) int {
 	data := codegen.DecodeData(c.Payload)
 	if data == nil {
@@ -307,9 +260,4 @@ func gondnDecode(c benchmark.Case) int {
 		panic("Unable to parse data")
 	}
 	return len(c.Payload)
-}
-
-func ndnpbDecode(c benchmark.Case) int {
-	// data := &ndnpb.Data{}
-	return 0
 }

@@ -220,7 +220,7 @@ const Wire = new Uint8Array([
   0x3c, 0x53, 0xd0, 0xd2, 0x26, 0x81, 0xea, 0xc6
 ])
 
-const oneRun = async (buf: Uint8Array) => {
+const oneRun = (buf: Uint8Array) => {
   Decoder.decode(buf, Data)
 }
 
