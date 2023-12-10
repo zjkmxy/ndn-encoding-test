@@ -689,3 +689,58 @@ Total time: 5.008 seconds
 Task decode-03 deno run --unstable decode-03.ts
 Total time: 11.888 seconds
 ```
+
+
+Raw Data - NDNts (Bun)
+---------------------
+
+### T1
+```text
+bun run encode-01.ts && bun run encode-02.ts && bun run encode-03.ts && bun run decode-01.ts && bun run decode-02.ts && bun run decode-03.ts 
+Total time: 39.549097486 seconds
+Total time: 43.045568321 seconds
+Total time: 65.91603183899998 seconds
+Total time: 14.188832559 seconds
+Total time: 4.743729421 seconds
+Total time: 14.121798136999999 seconds
+```
+
+### T2
+```text
+Total time: 39.28900103699999 seconds
+Total time: 43.252285094 seconds
+Total time: 65.97299556899999 seconds
+Total time: 13.984069043 seconds
+Total time: 4.861913965 seconds
+Total time: 14.687062007 seconds
+```
+
+### T3
+```text
+Total time: 39.136341529 seconds
+Total time: 43.502507312 seconds
+Total time: 65.728581785 seconds
+Total time: 14.621183228 seconds
+Total time: 4.8674803099999995 seconds
+Total time: 14.156230083 seconds
+```
+
+### T4
+```text
+Total time: 39.161664726 seconds
+Total time: 43.59745169800001 seconds
+Total time: 65.308621655 seconds
+Total time: 13.969182256999998 seconds
+Total time: 4.8352536520000005 seconds
+Total time: 13.903147477000001 seconds
+```
+
+### T5
+```text
+Total time: 39.476634435 seconds
+Total time: 43.183841632 seconds
+Total time: 65.86233592699999 seconds
+Total time: 13.966302925 seconds
+Total time: 4.861223849 seconds
+Total time: 16.490448918 seconds
+```
