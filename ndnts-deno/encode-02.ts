@@ -1,4 +1,4 @@
-import { Name, Data } from "@ndn/packet"
+import { Name, Data, Component } from "@ndn/packet"
 import { Encoder } from "@ndn/tlv"
 
 const oneRun = (i: number) => {
@@ -9,9 +9,9 @@ const oneRun = (i: number) => {
     Data.ContentType(0),
     Data.FreshnessPeriod(4000),
     Data.FinalBlock,
-    "10000",
     content
   )
+  data.finalBlockId = Component.from("10000")
   Encoder.encode(data)
 }
 
