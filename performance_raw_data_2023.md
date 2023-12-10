@@ -387,23 +387,23 @@ Raw Data - cpp-template
 ### T1
 ```text
 time ./encode-01
-4.61user 0.00system 0:04.61elapsed 100%CPU (0avgtext+0avgdata 11012maxresident)k
-0inputs+0outputs (0major+469minor)pagefaults 0swaps
+0.64user 0.00system 0:00.64elapsed 100%CPU (0avgtext+0avgdata 4536maxresident)k
+0inputs+0outputs (0major+243minor)pagefaults 0swaps
 time ./encode-02
-4.83user 0.00system 0:04.83elapsed 99%CPU (0avgtext+0avgdata 10716maxresident)k
-0inputs+0outputs (0major+468minor)pagefaults 0swaps
+0.84user 0.00system 0:00.84elapsed 100%CPU (0avgtext+0avgdata 4608maxresident)k
+0inputs+0outputs (0major+243minor)pagefaults 0swaps
 time ./encode-03
-24.55user 0.00system 0:24.56elapsed 99%CPU (0avgtext+0avgdata 10620maxresident)k
-0inputs+0outputs (0major+465minor)pagefaults 0swaps
+3.97user 0.00system 0:03.97elapsed 99%CPU (0avgtext+0avgdata 4484maxresident)k
+0inputs+0outputs (0major+240minor)pagefaults 0swaps
 time ./decode-01
-0.98user 0.00system 0:00.98elapsed 100%CPU (0avgtext+0avgdata 10688maxresident)k
-0inputs+0outputs (0major+463minor)pagefaults 0swaps
+0.43user 0.00system 0:00.43elapsed 100%CPU (0avgtext+0avgdata 2760maxresident)k
+0inputs+0outputs (0major+122minor)pagefaults 0swaps
 time ./decode-02
-1.01user 0.00system 0:01.01elapsed 100%CPU (0avgtext+0avgdata 10912maxresident)k
-0inputs+0outputs (0major+469minor)pagefaults 0swaps
+0.78user 0.00system 0:00.78elapsed 100%CPU (0avgtext+0avgdata 2952maxresident)k
+0inputs+0outputs (0major+126minor)pagefaults 0swaps
 time ./decode-03
-2.09user 0.00system 0:02.10elapsed 100%CPU (0avgtext+0avgdata 10648maxresident)k
-0inputs+0outputs (0major+463minor)pagefaults 0swaps
+1.49user 0.00system 0:01.49elapsed 100%CPU (0avgtext+0avgdata 2872maxresident)k
+0inputs+0outputs (0major+125minor)pagefaults 0swaps
 ```
 
 ### T2
@@ -613,79 +613,79 @@ Raw Data - NDNts (Deno)
 ```text
 deno task encode-01 && deno task encode-02 && deno task encode-03 && deno task decode-01 && deno task decode-02 && deno task decode-03
 Task encode-01 deno run --unstable encode-01.ts
-Total time: 50.524 seconds
+Total time: 49.802 seconds
 Task encode-02 deno run --unstable encode-02.ts
-Total time: 54.028 seconds
+Total time: 52.882 seconds
 Task encode-03 deno run --unstable encode-03.ts
-Total time: 87.27 seconds
+Total time: 86.482 seconds
 Task decode-01 deno run --unstable decode-01.ts
-Total time: 12.214 seconds
+Total time: 12.352 seconds
 Task decode-02 deno run --unstable decode-02.ts
-Total time: 4.752 seconds
+Total time: 4.78 seconds
 Task decode-03 deno run --unstable decode-03.ts
-Total time: 11.808 seconds
+Total time: 13.392 seconds
 ```
 
 ### T2
 ```text
 Task encode-01 deno run --unstable encode-01.ts
-Total time: 51.144 seconds
+Total time: 50.462 seconds
 Task encode-02 deno run --unstable encode-02.ts
-Total time: 55.054 seconds
+Total time: 54.42 seconds
 Task encode-03 deno run --unstable encode-03.ts
-Total time: 83.922 seconds
+Total time: 85.134 seconds
 Task decode-01 deno run --unstable decode-01.ts
-Total time: 13.482 seconds
+Total time: 13.518 seconds
 Task decode-02 deno run --unstable decode-02.ts
-Total time: 4.636 seconds
+Total time: 4.768 seconds
 Task decode-03 deno run --unstable decode-03.ts
-Total time: 13.334 seconds
+Total time: 13.484 seconds
 ```
 
 ### T3
 ```text
 Task encode-01 deno run --unstable encode-01.ts
-Total time: 50.562 seconds
+Total time: 51.018 seconds
 Task encode-02 deno run --unstable encode-02.ts
-Total time: 55.008 seconds
+Total time: 55.424 seconds
 Task encode-03 deno run --unstable encode-03.ts
-Total time: 85.756 seconds
+Total time: 88.404 seconds
 Task decode-01 deno run --unstable decode-01.ts
-Total time: 12.178 seconds
+Total time: 13.158 seconds
 Task decode-02 deno run --unstable decode-02.ts
-Total time: 4.658 seconds
+Total time: 4.778 seconds
 Task decode-03 deno run --unstable decode-03.ts
-Total time: 12.428 seconds
+Total time: 13.316 seconds
 ```
 
 ### T4
 ```text
 Task encode-01 deno run --unstable encode-01.ts
-Total time: 50.612 seconds
+Total time: 50.894 seconds
 Task encode-02 deno run --unstable encode-02.ts
-Total time: 53.666 seconds
+Total time: 54.242 seconds
 Task encode-03 deno run --unstable encode-03.ts
-Total time: 83.664 seconds
+Total time: 88.614 seconds
 Task decode-01 deno run --unstable decode-01.ts
-Total time: 12.196 seconds
+Total time: 12.422 seconds
 Task decode-02 deno run --unstable decode-02.ts
-Total time: 5.366 seconds
+Total time: 4.764 seconds
 Task decode-03 deno run --unstable decode-03.ts
-Total time: 12.248 seconds
+Total time: 13.232 seconds
 ```
 
 ### T5
 ```text
 Task encode-01 deno run --unstable encode-01.ts
-Total time: 51.852 seconds
+Total time: 50.828 seconds
 Task encode-02 deno run --unstable encode-02.ts
-Total time: 53.83 seconds
+Total time: 53.402 seconds
 Task encode-03 deno run --unstable encode-03.ts
-Total time: 82.286 seconds
+Total time: 88.178 seconds
 Task decode-01 deno run --unstable decode-01.ts
-Total time: 13.41 seconds
+Total time: 13.636 seconds
 Task decode-02 deno run --unstable decode-02.ts
-Total time: 4.672 seconds
+Total time: 5.008 seconds
 Task decode-03 deno run --unstable decode-03.ts
-Total time: 12.254 seconds
+Total time: 11.888 seconds
 ```
