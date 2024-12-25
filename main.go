@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	enc "github.com/zjkmxy/go-ndn/pkg/encoding"
-	gondn "github.com/zjkmxy/go-ndn/pkg/ndn"
-	"github.com/zjkmxy/go-ndn/pkg/ndn/spec_2022"
-	gondnsec "github.com/zjkmxy/go-ndn/pkg/security"
-	"github.com/zjkmxy/go-ndn/pkg/utils"
+	enc "github.com/named-data/ndnd/std/encoding"
+	gondn "github.com/named-data/ndnd/std/ndn"
+	"github.com/named-data/ndnd/std/ndn/spec_2022"
+	gondnsec "github.com/named-data/ndnd/std/security"
+	"github.com/named-data/ndnd/std/utils"
 	"github.com/zjkmxy/ndn-encoding-test/benchmark"
 	"github.com/zjkmxy/ndn-encoding-test/codegen"
 	ndnpb "github.com/zjkmxy/ndn-encoding-test/protobuf"
@@ -83,7 +83,7 @@ func run(cases []benchmark.Case) {
 	tim, _ = benchmark.Execute(cases, codegenEncode)
 	fmt.Printf("codegen: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, gondnEncode)
-	fmt.Printf("go-ndn: \t%v\n", tim)
+	fmt.Printf("ndnd/std: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, ndnpbEncode)
 
 	fmt.Printf("protobuf: \t%v\n", tim)
@@ -100,7 +100,7 @@ func runDecoding(cases []benchmark.Case) {
 	tim, _ = benchmark.Execute(cases, codegenDecode)
 	fmt.Printf("codegen: \t%v\n", tim)
 	tim, _ = benchmark.Execute(cases, gondnDecode)
-	fmt.Printf("go-ndn: \t%v\n", tim)
+	fmt.Printf("ndnd/std: \t%v\n", tim)
 	fmt.Printf("=== Total Bytes: %d ===\n", totalBytes)
 	fmt.Println()
 }
@@ -153,7 +153,7 @@ func gondnEncode(c benchmark.Case) int {
 	if c.IfSign {
 		signer = gondnsec.NewSha256Signer()
 	}
-	wire, _, _ := spec.MakeData(
+	encoded, _ := spec.MakeData(
 		name,
 		&gondn.DataConfig{
 			ContentType: utils.IdPtr(gondn.ContentTypeBlob),
@@ -166,7 +166,7 @@ func gondnEncode(c benchmark.Case) int {
 		enc.Wire{c.Payload},
 		signer,
 	)
-	return len(wire)
+	return len(encoded.Wire)
 }
 
 func ndnpbEncode(c benchmark.Case) int {
